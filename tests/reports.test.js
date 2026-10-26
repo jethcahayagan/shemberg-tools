@@ -43,9 +43,22 @@ test("Excel is a valid workbook with box totals, product totals, logo and lossle
     ["Box Inventory", "Product Summary", "Original Records"],
   );
   assert.equal(wb.getWorksheet("Original Records").rowCount, 5);
+  let headerRow, firstData;
+  wb.getWorksheet("Box Inventory").eachRow((row) => {
+    if (!headerRow && row.getCell(1).value === "Date") {
+      headerRow = row.number;
+      firstData = wb.getWorksheet("Box Inventory").getRow(headerRow + 1);
+    }
+  });
+  assert.equal(firstData.getCell(1).value, "2025-03-26");
+  assert.equal(firstData.getCell(2).value, "LB-2210");
+  assert.equal(firstData.getCell(3).value, 8);
+  assert.equal(firstData.getCell(4).value, 2);
+  assert.equal(firstData.getCell(5).value, "Bundle | Broken");
+  assert.equal(firstData.getCell(6).value, "2026-10-24");
   const values = [];
   wb.getWorksheet("Box Inventory").eachRow((r) => values.push(r.values));
-  assert.equal(values.find((v) => v[1] === "GRAND TOTAL")[4], 14);
+  assert.equal(values.find((v) => v[1] === "GRAND TOTAL")[3], 14);
   assert.equal(
     wb.getWorksheet("Product Summary").getRow(2).getCell(3).value,
     14,
@@ -96,4 +109,68 @@ test("PDF is a real PDF with consistent box totals, logo, originals and product 
   ])
     assert.ok(s.includes(text), text);
   assert.ok(s.includes("/Subtype /Image"));
+});
+
+test("raw sheet Excel imports with separate sheet metadata; reports keep different sample dates and sessions separate", async () => {
+  const wb = new ExcelJS.Workbook(),
+    sheet = wb.addWorksheet("Encoded samples");
+  sheet.addRow(["Date", "Samples", "Quantity", "Remarks"]);
+  sheet.addRow(["2025-05-01", "Mixed-case sample", 2, "50/50 hot process"]);
+  sheet.addRow(["2025-05-01", "Mixed-case sample", 3, "#2; 48°C"]);
+  sheet.addRow(["2025-05-02", "Mixed-case sample", 4, "Different sample date"]);
+  const file = new File([await wb.xlsx.writeBuffer()], "encoded.xlsx");
+  const imported = await readInventoryFile(file, {
+    inventoryDate: "2026-10-24",
+    box: "3 (Blue)",
+  });
+  assert.equal(imported[0].code, "Mixed-case sample");
+  assert.equal(imported[0].date, "2026-10-24");
+  assert.equal(imported[0].sampleDate, "2025-05-01");
+  const m = reportModel(
+    [...imported, { ...imported[0], date: "2026-10-25", quantity: 6 }],
+    logo,
+  );
+  assert.equal(m.quantity, 15);
+  assert.equal(m.consolidatedCount, 3);
+  const output = new ExcelJS.Workbook();
+  await output.xlsx.load(await (await excelReport(m)).arrayBuffer());
+  const rows = [];
+  let started = false;
+  output.getWorksheet("Box Inventory").eachRow((row) => {
+    if (row.getCell(1).value === "Date") {
+      started = true;
+      return;
+    }
+    if (started && /^\d{4}-\d{2}-\d{2}$/.test(String(row.getCell(1).value)))
+      rows.push(row.values.slice(1));
+  });
+  assert.deepEqual(
+    rows.map((r) => [r[0], r[1], r[2], r[3], r[5]]),
+    [
+      ["2025-05-01", "Mixed-case sample", 5, 2, "2026-10-24"],
+      ["2025-05-01", "Mixed-case sample", 6, 1, "2026-10-25"],
+      ["2025-05-02", "Mixed-case sample", 4, 1, "2026-10-24"],
+    ],
+  );
+  assert.equal(rows[0][4], "50/50 hot process | #2; 48°C");
+  const zip = await JSZip.loadAsync(await (await wordReport(m)).arrayBuffer());
+  const xml = await zip.file("word/document.xml").async("string");
+  for (const v of [
+    "2025-05-01",
+    "2025-05-02",
+    "2026-10-24",
+    "2026-10-25",
+    "Mixed-case sample",
+    "50/50 hot process",
+    "#2; 48°C",
+  ])
+    assert.ok(xml.includes(v), v);
+  const pdf = Buffer.from(await pdfReport(m).arrayBuffer()).toString("latin1");
+  for (const v of [
+    "2025-05-01",
+    "2025-05-02",
+    "Mixed-case sample",
+    "GRAND TOTAL: 15 units",
+  ])
+    assert.ok(pdf.includes(v), v);
 });

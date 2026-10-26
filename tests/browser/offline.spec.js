@@ -60,7 +60,7 @@ test("standalone HTML needs no external resources and supports persistence and a
     name: "sample.csv",
     mimeType: "text/csv",
     buffer: Buffer.from(
-      "Inventory Date,Product Code,Product Description,Quantity,Box Number,Remarks\n2026-10-24,TP2,Mint,3,,Loose\n",
+      "Date of Inventory,Date,Samples,Quantity,Box Number,Remarks\n2026-10-24,2025-06-01,TP2,3,,Loose\n",
     ),
   });
   await expect(page.locator("#import-summary")).toContainText(

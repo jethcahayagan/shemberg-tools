@@ -44,6 +44,7 @@ test("data entry, persistence, filters, editing, imports, branded downloads and 
     page
       .locator("#boxes .box")
       .first()
+      .locator("details")
       .getByText("2025-03-26", { exact: true }),
   ).toHaveCount(2);
   await page
@@ -64,13 +65,11 @@ test("data entry, persistence, filters, editing, imports, branded downloads and 
   await page.locator("#reset").click();
   const csv =
     "Inventory Date,Sample Date,Product Code,Product Description,Quantity,Box Number,Remarks\n2026-10-24,2025-03-26,LB-2210,Toothpaste sample,3,001,Broken\n2026-10-24,2025-03-26,TP002,Mint,2,010,New\n";
-  await page
-    .locator("#import-file")
-    .setInputFiles({
-      name: "sample.csv",
-      mimeType: "text/csv",
-      buffer: Buffer.from(csv),
-    });
+  await page.locator("#import-file").setInputFiles({
+    name: "sample.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(csv),
+  });
   await expect(page.locator("#import-summary")).toContainText(
     "1 possible duplicates",
   );
@@ -103,14 +102,12 @@ test("data entry, persistence, filters, editing, imports, branded downloads and 
     17,
   );
   await page.locator("[data-close=report-dialog]").click();
-  await page
-    .locator("#import-file")
-    .setInputFiles({
-      name: "roundtrip.xlsx",
-      mimeType:
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      buffer: exports.xlsx,
-    });
+  await page.locator("#import-file").setInputFiles({
+    name: "roundtrip.xlsx",
+    mimeType:
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    buffer: exports.xlsx,
+  });
   await expect(page.locator("#import-summary")).toContainText(
     "5 possible duplicates",
   );

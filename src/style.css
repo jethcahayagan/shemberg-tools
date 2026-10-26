@@ -772,3 +772,47 @@ dialog.large {
 .brand-icon {
   display: none;
 }
+
+.sheet-settings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  align-items: center;
+  padding: 20px 23px;
+  margin-bottom: 22px;
+  border-left: 4px solid var(--green);
+}
+.sheet-settings > div {
+  flex: 1;
+  min-width: 200px;
+}
+.sheet-settings label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 11px;
+  color: #6d877b;
+}
+.sheet-settings input {
+  min-width: 210px;
+}
+.filters {
+  flex-wrap: wrap;
+}
+.filters .search {
+  min-width: 230px;
+}
+@media (max-width: 800px) {
+  .sheet-settings {
+    gap: 15px;
+  }
+  .sheet-settings label {
+    width: 100%;
+  }
+  .sheet-settings input {
+    width: 100%;
+  }
+  .filters .search {
+    min-width: 0;
+  }
+}

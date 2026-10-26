@@ -8,12 +8,10 @@ export function boxKey(value) {
 }
 export function normalize(input) {
   const date = String(input.date ?? "").trim(),
-    code = String(input.code ?? "")
-      .trim()
-      .toUpperCase(),
+    code = String(input.code ?? "").trim(),
     description = String(input.description ?? "").trim(),
     box = String(input.box ?? "").trim(),
-    remarks = String(input.remarks ?? "").trim();
+    remarks = String(input.remarks ?? "");
   const quantity = Number(input.quantity);
   const sampleDate = String(input.sampleDate ?? "").trim();
   if (
@@ -29,8 +27,7 @@ export function normalize(input) {
     new Date(date).toISOString().slice(0, 10) !== date
   )
     throw Error("Inventory date must be a valid YYYY-MM-DD date.");
-  if (!code || !description)
-    throw Error("Product code and description are required.");
+  if (!code) throw Error("Samples (sample name or code) is required.");
   if (
     String(input.quantity ?? "").trim() === "" ||
     !Number.isSafeInteger(quantity) ||
@@ -66,9 +63,28 @@ export function fingerprint(r) {
     r.sampleDate || "",
   ]);
 }
+export function compareSamples(a, b) {
+  return (
+    (a.sampleDate || "9999-12-31").localeCompare(
+      b.sampleDate || "9999-12-31",
+    ) ||
+    collator.compare(a.code, b.code) ||
+    a.date.localeCompare(b.date)
+  );
+}
+export function sortOriginals(records) {
+  return [...records].sort((a, b) => {
+    const ak = boxKey(a.box),
+      bk = boxKey(b.box);
+    return (
+      (ak === bk ? 0 : !ak ? 1 : !bk ? -1 : collator.compare(ak, bk)) ||
+      compareSamples(a, b)
+    );
+  });
+}
 export function consolidate(records) {
   const boxes = new Map();
-  for (const r of records) {
+  for (const [index, r] of records.entries()) {
     const key = boxKey(r.box);
     if (!boxes.has(key))
       boxes.set(key, {
@@ -78,10 +94,15 @@ export function consolidate(records) {
         total: 0,
       });
     const b = boxes.get(key),
-      k = JSON.stringify([r.date, r.code.toUpperCase()]);
+      k = JSON.stringify([
+        r.date,
+        r.sampleDate || `undated-original-${index}`,
+        r.code.toUpperCase(),
+      ]);
     if (!b.entries.has(k))
       b.entries.set(k, {
         date: r.date,
+        sampleDate: r.sampleDate,
         code: r.code,
         quantity: 0,
         sources: [],
@@ -100,10 +121,7 @@ export function consolidate(records) {
     .sort((a, b) => (!a.key ? 1 : !b.key ? -1 : collator.compare(a.key, b.key)))
     .map((b) => ({
       ...b,
-      rows: [...b.entries.values()].sort(
-        (a, b) =>
-          a.date.localeCompare(b.date) || collator.compare(a.code, b.code),
-      ),
+      rows: [...b.entries.values()].sort(compareSamples),
     }));
 }
 export function summarize(records) {
@@ -168,16 +186,34 @@ export function parseCSV(text) {
   return rows;
 }
 const aliases = {
-  date: ["inventorydate", "date"],
-  code: ["productcode", "code", "sku"],
-  description: ["productdescription", "description", "productname"],
+  date: ["inventorydate", "dateofinventory", "inventorysessiondate"],
+  code: [
+    "samples",
+    "sample",
+    "samplecode",
+    "samplename",
+    "productcode",
+    "code",
+    "sku",
+  ],
+  description: [
+    "productdescription",
+    "description",
+    "descriptionoptional",
+    "productname",
+  ],
   quantity: ["quantity", "qty", "units"],
   box: ["boxnumber", "boxno", "box"],
   remarks: ["remarks", "notes"],
-  sampleDate: ["sampledate", "preparationdate"],
-  sessionAt: ["sessiontimestamp", "inventorysession", "sessionat"],
+  sampleDate: ["sampledate", "date", "preparationdate"],
+  sessionAt: [
+    "entrytimestamp",
+    "sessiontimestamp",
+    "inventorysession",
+    "sessionat",
+  ],
 };
-export function importRows(rows) {
+export function importRows(rows, defaults = {}) {
   if (rows.length < 2)
     throw Error("The file needs a header and at least one data row.");
   const headers = rows[0].map((x) =>
@@ -191,7 +227,7 @@ export function importRows(rows) {
       headers.findIndex((h) => v.includes(h)),
     ]),
   );
-  for (const key of ["date", "code", "description", "quantity"])
+  for (const key of ["sampleDate", "code", "quantity"])
     if (mapping[key] < 0)
       throw Error(`Missing column: ${key}. Use the provided CSV template.`);
   return rows
@@ -205,6 +241,14 @@ export function importRows(rows) {
             n < 0 ? "" : (row[n] ?? ""),
           ]),
         );
+        if (mapping.date < 0) r.date = defaults.inventoryDate || "";
+        if (mapping.box < 0) r.box = defaults.box || "";
+        if (!defaults.allowUndated && !String(r.sampleDate ?? "").trim())
+          throw Error("Date (sample date) is required.");
+        if (!r.date)
+          throw Error(
+            "Date of Inventory is required. Set it in the sheet header or include a Date of Inventory column.",
+          );
         if (r.date instanceof Date) r.date = r.date.toISOString().slice(0, 10);
         if (typeof r.date === "number")
           r.date = new Date(Date.UTC(1899, 11, 30) + r.date * 86400000)

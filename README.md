@@ -1,72 +1,79 @@
-# Shemberg Inventory
+# Shemberg Sample Inventory
 
-A functional browser-based toothpaste and laboratory sample inventory workspace, built with HTML, CSS and JavaScript. Uses the official supplied Shemberg logo, with a replacement uploader (PNG, JPEG or AVIF).
+A working browser application for manually encoded toothpaste/sample inventories. The handwritten sheet is a **format reference only**: no photograph is transcribed, no unclear values are guessed, and no inventory is preloaded. The supplied official Shemberg logo is included, with an uploader for replacement branding.
 
-## Download and open directly
+## Download and use
 
-Download `standalone/Shemberg-Inventory.html` and double-click it to open in current Chrome, Edge or Firefox. This single file includes the application, logo and all import/export libraries. It works offline without Node.js, a server, installation or an internet connection. Choose **Template** for an import example. Browser storage remains specific to this browser and local file location; keep the file at the same location and export Excel backups regularly. Moving the file or switching browsers may show a separate inventory.
+Download **standalone/Shemberg-Inventory.html**, save it on your computer, and open it in a current Chrome, Edge or Firefox browser. This single file contains the app, styles, logo and Excel/Word/PDF libraries. No Node.js, server, installation or network connection is needed to use it.
 
-To regenerate the downloadable file after editing source: `npm ci && npm run build:standalone`.
+Keep the HTML at the same file location and use the same browser profile. Browser storage is specific to the browser/site or local file location. Export unfiltered Excel backups regularly; moving the file, changing browsers or clearing browser data may show an empty inventory. The app is a local, single-browser workspace, without shared accounts or cloud synchronization.
 
-## Run
+## Sheet workflow
+
+1. Set **Box Number** and **Date of Inventory (session)** in the sheet header. The box may be blank; that explicitly means unassigned.
+2. Add each handwritten row using **Date (sample date)**, **Samples (name or code)**, **Quantity** and **Remarks**. The session date and box are supplied as editable defaults. Description is optional, since the original sheet has only a Samples column.
+3. Names/codes retain entered capitalization and remarks retain their complete text. No mandatory TP-style code or separate description is imposed. Sample dates are not replaced with the stock-count date.
+4. Choose **Consolidated view** or **Original records**. Both group by box, then sort by sample date oldest first and natural alphanumeric sample name/code. Expand any consolidated row to inspect all original quantities, remarks, sample dates, inventory dates and entry timestamps. Edit/delete always affects an individual original record.
+5. Filter by inventory session, box, sample-date range or search. If several inventory dates are selected, totals combine those selected sessions; filter to one session for a single stocktake. The sheet-header settings control new entry/import defaults, not report filters.
+6. Preview and export the selected records as actual Excel, Word and PDF files.
+
+### Consolidation rules
+
+Combine only the same **box + inventory session date + sample date + sample name/code**. Different sample dates stay separate even when the sample name/code repeats. Different inventory session dates and different boxes also stay separate. Every original source record, quantity and remark remains available. Different remarks are preserved together; descriptions remain in original records and overall sample summaries. Sample-code matching is case-insensitive while original capitalization is preserved.
+
+Boxes sort naturally (1, 2, 10); unassigned stock is last under **UNASSIGNED BOX**. Numeric box aliases such as 001 and 1 identify the same box, retaining original labels in source records; text labels such as `1 (Brown)` and `1 (White)` remain separate. Legacy saved records with no sample date are labeled NOT RECORDED and never merged with another source record; no sample date is inferred from the inventory session date. New entry/import requires a valid sample date.
+
+The report shows assigned-box count, unique-sample count, total quantity, original-record count and consolidated-record count. Unassigned inventory contributes to quantities and record counts, but not the assigned-box count. Every box has a subtotal and the report has a grand total. Overall sample summaries combine the selected records across boxes/dates for reference; they do not replace the dated detail.
+
+### Dates and timestamps
+
+- **Date of Inventory**: user-selected session/stock-count date from the sheet header.
+- **Date**: the recorded date of each sample, used for detailed sorting and consolidation.
+- **Entry timestamp**: automatically recorded when the record is entered or imported; editing preserves it. Start a new entry-time session with New session.
+- **Report generated**: a separate timestamp recorded for each export, never substituted for the inventory date or sample date.
+
+Dates are stored as YYYY-MM-DD. Exported timestamps use ISO UTC; the entry-session header uses the browser's local timezone.
+
+## Import encoded CSV or Excel
+
+The minimal spreadsheet structure matches the handwritten row columns:
+
+| Date | Samples | Quantity | Remarks |
+| ---- | ------- | -------- | ------- |
+
+**Template** downloads a header-only CSV; it contains no photographed or invented inventory. Supply the shared **Box Number** and **Date of Inventory** using the app's sheet header before selecting a file. Optionally include per-row `Box Number` and `Date of Inventory` columns in the file; these override the defaults. An explicitly blank box cell stays unassigned, even when the sheet header has a box selected.
+
+Description is optional. Additional supported columns: `Description`, `Entry Timestamp`. For compatibility, Product Code/Code/SKU map to Samples, Sample Date/Preparation Date map to Date, Inventory Date maps to Date of Inventory, and Qty, Box/Box No, Notes, Product Description and Session Timestamp also work. **An unqualified Date column always means sample date.** It is never interpreted as the inventory session date.
+
+Use ISO dates or genuine Excel date cells. Format box-number cells as text to preserve leading zeros. CSV supports quoted commas, quotes and multiline remarks. Supported Excel format is .xlsx; save older .xls documents as .xlsx first. For general files, the first worksheet must contain the headers in its first row.
+
+Review every row and possible duplicate before confirming. No data is saved until confirmation. Duplicates are detected against current records and within the file by both dates, box, sample name/code, quantity, description and complete remarks. Possible duplicates are skipped by default; uncheck the option to retain them deliberately. Different remarks remain distinct original records, even when they later consolidate. Invalid rows reject the import with a row number; no partial save occurs. Limits: 15 MB and 50,000 rows per import; browser storage capacity can be much smaller. A failed save leaves existing records unchanged.
+
+Excel reports from this app automatically reimport the **Original Records** worksheet, preventing double counting of consolidated totals. Older backups with undated original records can be restored without guessing dates; those originals remain separate.
+
+## Reports
+
+Screen and reports share the same calculation functions. Default order is box, sample date, sample name/code, then inventory date as a tiebreaker. Alternate screen sorting does not change the report order. All formats include box headings/totals, source counts, complete remarks, a grand total, overall sample summary, original records, distinct inventory dates/entry timestamps/generation timestamp and logo.
+
+- **Excel (.xlsx)**: Box Inventory, Product Summary (overall sample totals) and Original Records worksheets. Dated rows contain Date, Samples, Quantity, Source Entries, Remarks and Date of Inventory; quantities and totals are numeric cells in matching columns.
+- **Word (.docx)**: box headings with readable tables, repeating table headers, subtotals, sample summary and original-record appendix. Box headings stay with the next table where practical.
+- **PDF**: landscape tables, pagination, repeating headers, box totals, original-record appendix and grand total; space is reserved below box headings when practical. Large boxes may continue across pages.
+
+Clear filters before exporting a complete backup. PNG, JPEG or AVIF logo uploads up to 2 MB are converted locally to PNG for consistent report embedding.
+
+## Development and web hosting
 
 Requires Node.js 22.12+ (validated with Node 24).
 
 ```sh
-cd /workspace/shemberg-tools
 npm ci
-npm run dev
+npm run dev                 # Hosted development version
+npm test                    # Calculation/import/report artifact tests
+npm run build               # Static website in dist/
+npm run build:standalone    # Regenerate the downloadable HTML
+npm run test:e2e            # Browser workflows, downloads and standalone test
 ```
 
-Open the address printed by Vite on your own machine. For a production build, run `npm run build`; serve the generated `dist/` directory through any static web host. `npm run preview` serves that build for local verification. No backend, database, API keys or accounts are needed. Use a web server rather than opening index.html as a file.
+Browser tests use /usr/bin/chromium when present. Otherwise run `npx playwright install chromium` or set CHROMIUM_PATH. The suite starts its own Vite server on port 5180. Managed cloud Chromium blocks file: navigation, so the standalone test delivers the exact HTML bytes through a locally intercepted document request and rejects all external resource requests. It exercises persistence, CSV import, logo and all three exports without external resources. Direct file opening is intended for normal desktop browsers.
 
-## Inventory and dates
-
-- Add original records with inventory date, optional sample date, code, description, whole-unit quantity, box and remarks. Free-form codes such as `LB-2210` and box labels such as `1 (Brown)` are supported.
-- The photographed sheet's **24 October 2026** is the inventory date; each row's historical date belongs in **Sample date**. Sample dates remain visible in source entries and original-record exports. Nothing from the handwritten photograph is automatically loaded as verified stock. The downloadable CSV template contains one illustrative row based on the photograph; review it before importing.
-- Session timestamps capture when the count was entered; start a new session using the header button. Editing preserves the original session timestamp. Reports record a separate generation timestamp. Stored/exported timestamps use ISO UTC; the header displays your browser's local timezone.
-- Boxes sort naturally (1, 2, 10), then dates oldest first, then natural alphanumeric product codes. Unassigned stock appears last under `UNASSIGNED BOX`. The screen offers alternate within-box sorts; reports always use the required default hierarchy.
-- Numeric box labels `001` and `1` identify the same box; original labels remain in original records. Text box labels compare without case distinctions, with original labels preserved. Product codes are normalized to uppercase.
-- Consolidation combines only **box + inventory date + product code**. Source records, descriptions, individual sample dates and every remark remain available by expanding the source-entry row. Different sample dates may appear under one consolidated row; different inventory dates never merge. Editing and deleting act on individual source records, then recalculate every total.
-- Summary cards, box totals, product totals and grand totals use the current search/box/date filters. Clear filters before making a complete backup. The assigned-box count excludes the separately labeled unassigned group. Consolidated record count appears below Original records.
-
-## Imports and exports
-
-Use **Template** for instructions and a downloadable CSV template. Import CSV (including quoted commas and multiline remarks) or Excel **.xlsx**; save older .xls documents as .xlsx first. Required columns:
-
-| Header              | Required | Format                                         |
-| ------------------- | -------- | ---------------------------------------------- |
-| Inventory Date      | Yes      | YYYY-MM-DD or Excel date cell                  |
-| Sample Date         | No       | YYYY-MM-DD or Excel date cell                  |
-| Product Code        | Yes      | Text, including laboratory sample names        |
-| Product Description | Yes      | Text                                           |
-| Quantity            | Yes      | Nonnegative whole units                        |
-| Box Number          | No       | Text; blank stays unassigned                   |
-| Remarks             | No       | Text                                           |
-| Session Timestamp   | No       | ISO timestamp; omitted uses the active session |
-
-Common aliases Date, Code/SKU, Description, Qty, Box/Box No and Notes also work. Format box-number cells as text to preserve leading zeros. For general Excel imports the first worksheet must contain the header row. Excel reports from this app automatically use the **Original Records** sheet when reimported, avoiding double counting consolidated totals. Invalid rows reject the entire import with the row number; no partial save occurs.
-
-Imports show all rows for review before saving. Possible duplicates match date, sample date, code, description, quantity, box and remarks, both against saved records and within the file. They are skipped by default; uncheck the option to keep them deliberately. Different remarks are preserved as separate source entries. Duplicates with changed wording cannot be inferred automatically. Up to 15 MB and 50,000 records per import are supported; local storage capacity is typically much smaller, and failed saves leave current records intact.
-
-The report preview and actual **.xlsx, .docx and .pdf** exports all use the same grouping and quantity calculations. Reports include box headings/totals, grand total, overall product summary, all original records (including sample dates and session timestamps), generation time and logo. Excel has separate Box Inventory, Product Summary and Original Records worksheets. Word repeats table headers and keeps box headings with the following table. PDF repeats headers, paginates, numbers pages and reserves space beneath each box heading when practical. Large boxes can continue across pages.
-
-## Persistence and backups
-
-Records and uploaded branding persist in this browser's localStorage, separately for each site address and browser profile. This is a single-browser tool, without shared multiuser storage or automatic cloud synchronization. Refreshing retains records; clearing site data removes them. Export an unfiltered Excel backup regularly, and before changing hosting addresses. Reimport its Original Records sheet to restore records. There is no sample data seeded into storage.
-
-## Verification
-
-```sh
-npm test             # Core rules and actual Excel, Word and PDF artifacts
-npm run build        # Production compilation
-npm run test:e2e     # Browser workflow, downloads and responsive layout
-```
-
-Browser tests use `/usr/bin/chromium` when available. Otherwise run `npx playwright install chromium` first, or set `CHROMIUM_PATH` to an installed Chromium executable. The browser suite starts its own Vite server on port 5180. Tests cover add/edit/delete, refresh persistence, source inspection, filtering, duplicate review, Excel round-trip, branded downloads and mobile overflow. Core tests cover sorting, consolidation boundaries, validation, quantities, CSV parsing and report contents.
-
-## Publish
-
-Run `npm ci && npm run build` and upload **the contents of dist/** to a static host such as GitHub Pages, Cloudflare Pages, Netlify or an internal server. Use `npm run build` as the build command and `dist` as the output directory. Relative asset paths support repository subdirectories. For GitHub Pages, configure a Pages build workflow or publish dist through your preferred deployment tool. Pushing source code alone does not publish a website.
-
-The supplied logo is included solely for this requested application; no other brand assets or stock images are used. The initial handwritten sheet is a reference, not a verified machine-readable inventory import.
+For web hosting, publish the contents of dist/ to a static host. Use `npm run build` as build command and dist as output directory. Relative paths support subdirectories. Pushing the source does not deploy a site. To distribute the offline app, distribute only standalone/Shemberg-Inventory.html.

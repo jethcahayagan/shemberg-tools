@@ -12,54 +12,54 @@ import {
 } from "docx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { summarize, parseCSV, importRows } from "./core.js";
+import { summarize, parseCSV, importRows, sortOriginals } from "./core.js";
 export const columns = [
-  "Inventory Date",
-  "Product Code",
-  "Product Description",
+  "Date",
+  "Samples",
   "Quantity",
   "Source Entries",
   "Remarks",
+  "Date of Inventory",
 ];
 export function reportModel(records, logo, now = new Date()) {
   return {
     ...summarize(records),
-    records,
+    records: sortOriginals(records),
     logo,
     generatedAt: now.toISOString(),
+    inventoryDates: [...new Set(records.map((r) => r.date))].sort(),
     sessions: [
       ...new Set(records.map((r) => r.sessionAt).filter(Boolean)),
     ].sort(),
   };
 }
-const rowValues = (r) => [
-  r.date,
-  r.sampleDate || "",
+export const rowValues = (r) => [
+  r.sampleDate || "NOT RECORDED",
   r.code,
-  r.descriptions.join(" / "),
   r.quantity,
   r.sources.length,
   r.remarks.join(" | "),
+  r.date,
 ];
 const originalHeaders = [
-  "Inventory Date",
-  "Sample Date",
-  "Product Code",
-  "Product Description",
+  "Date of Inventory",
+  "Date",
+  "Samples",
   "Quantity",
   "Box Number",
   "Remarks",
-  "Session Timestamp",
+  "Description (optional)",
+  "Entry Timestamp",
   "Record ID",
 ];
 const originalValues = (r) => [
   r.date,
   r.sampleDate || "",
   r.code,
-  r.description,
   r.quantity,
   r.box,
   r.remarks,
+  r.description,
   r.sessionAt || "",
   r.id || "",
 ];
@@ -82,10 +82,10 @@ export async function excelReport(m) {
   ws.columns = [
     { width: 18 },
     { width: 20 },
-    { width: 40 },
     { width: 14 },
-    { width: 18 },
+    { width: 16 },
     { width: 55 },
+    { width: 20 },
   ];
   if (m.logo) {
     const id = wb.addImage({ base64: m.logo, extension: "png" });
@@ -112,7 +112,8 @@ export async function excelReport(m) {
     "Consolidated records",
     m.consolidatedCount,
   ]);
-  ws.addRow(["Inventory sessions (timestamps)"]);
+  ws.addRow(["Dates of Inventory", m.inventoryDates.join(", ")]);
+  ws.addRow(["Entry timestamps (not report generation)"]);
   for (const s of m.sessions) ws.addRow([s]);
   for (const b of m.boxes) {
     ws.addRow([]);
@@ -120,14 +121,14 @@ export async function excelReport(m) {
     h.font = { bold: true, color: { argb: "FF087F72" }, size: 14 };
     ws.addRow(columns).font = { bold: true };
     for (const r of b.rows) ws.addRow(rowValues(r));
-    ws.addRow(["BOX TOTAL", "", "", b.total]).font = { bold: true };
+    ws.addRow(["BOX TOTAL", "", b.total]).font = { bold: true };
   }
-  ws.addRow(["GRAND TOTAL", "", "", m.quantity]).font = { bold: true };
+  ws.addRow(["GRAND TOTAL", "", m.quantity]).font = { bold: true };
   for (const row of ws._rows.filter(Boolean))
     row.alignment = { vertical: "top", wrapText: true };
   ws.views = [{ state: "frozen", ySplit: 1 }];
   const products = wb.addWorksheet("Product Summary");
-  products.addRow(["Product Code", "Product Description", "Quantity"]);
+  products.addRow(["Samples", "Description (optional)", "Quantity"]);
   m.products.forEach((p) =>
     products.addRow([p.code, [...p.descriptions].join(" / "), p.quantity]),
   );
@@ -136,16 +137,17 @@ export async function excelReport(m) {
   const originals = wb.addWorksheet("Original Records");
   originals.addRow(originalHeaders);
   m.records.forEach((r) => originals.addRow(originalValues(r)));
-  originals.columns = [18, 18, 20, 40, 14, 18, 55, 30, 40].map((width) => ({
+  originals.columns = [20, 18, 25, 14, 18, 55, 40, 30, 40].map((width) => ({
     width,
   }));
   return new Blob([await wb.xlsx.writeBuffer()], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
 }
-export async function readInventoryFile(file) {
+export async function readInventoryFile(file, defaults = {}) {
   if (file.size > 15 * 1024 * 1024) throw Error("Choose a file under 15 MB.");
-  if (/\.csv$/i.test(file.name)) return importRows(parseCSV(await file.text()));
+  if (/\.csv$/i.test(file.name))
+    return importRows(parseCSV(await file.text()), defaults);
   if (!/\.xlsx$/i.test(file.name))
     throw Error(
       "Choose a .csv or .xlsx file. Legacy .xls files must be saved as .xlsx first.",
@@ -169,7 +171,10 @@ export async function readInventoryFile(file) {
         ),
     );
   });
-  return importRows(rows);
+  return importRows(rows, {
+    ...defaults,
+    allowUndated: ws.name === "Original Records",
+  });
 }
 export async function wordReport(m) {
   const p = (text, heading) =>
@@ -215,7 +220,8 @@ export async function wordReport(m) {
     p(
       `${m.boxCount} assigned boxes · ${m.products.length} products · ${m.originalCount} original records · ${m.consolidatedCount} consolidated records`,
     ),
-    p(`Inventory sessions: ${m.sessions.join(", ") || "Not recorded"}`),
+    p(`Dates of Inventory: ${m.inventoryDates.join(", ") || "No records"}`),
+    p(`Entry timestamps: ${m.sessions.join(", ") || "Not recorded"}`),
   );
   for (const b of m.boxes)
     children.push(
@@ -231,7 +237,7 @@ export async function wordReport(m) {
     p(`GRAND TOTAL: ${m.quantity} units`, HeadingLevel.HEADING_1),
     p("Overall product summary", HeadingLevel.HEADING_1),
     table(
-      ["Product Code", "Description", "Quantity"],
+      ["Samples", "Description (optional)", "Quantity"],
       m.products.map((p) => [
         p.code,
         [...p.descriptions].join(" / "),
@@ -279,7 +285,8 @@ export function pdfReport(m) {
   line(
     `${m.boxCount} assigned boxes | ${m.products.length} products | ${m.originalCount} original records | ${m.consolidatedCount} consolidated records`,
   );
-  line("Inventory session timestamps:");
+  line(`Dates of Inventory: ${m.inventoryDates.join(", ") || "No records"}`);
+  line("Entry timestamps:");
   for (const s of m.sessions) line(s);
   const table = (head, body) => {
     autoTable(pdf, {
@@ -305,7 +312,7 @@ export function pdfReport(m) {
   line(`GRAND TOTAL: ${m.quantity} units`, 15);
   line("Overall product summary", 14);
   table(
-    ["Product Code", "Description", "Quantity"],
+    ["Samples", "Description (optional)", "Quantity"],
     m.products.map((p) => [
       p.code,
       [...p.descriptions].join(" / "),
