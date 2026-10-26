@@ -2,6 +2,12 @@
 
 A functional browser-based toothpaste and laboratory sample inventory workspace, built with HTML, CSS and JavaScript. Uses the official supplied Shemberg logo, with a replacement uploader (PNG, JPEG or AVIF).
 
+## Download and open directly
+
+Download `standalone/Shemberg-Inventory.html` and double-click it to open in current Chrome, Edge or Firefox. This single file includes the application, logo and all import/export libraries. It works offline without Node.js, a server, installation or an internet connection. Choose **Template** for an import example. Browser storage remains specific to this browser and local file location; keep the file at the same location and export Excel backups regularly. Moving the file or switching browsers may show a separate inventory.
+
+To regenerate the downloadable file after editing source: `npm ci && npm run build:standalone`.
+
 ## Run
 
 Requires Node.js 22.12+ (validated with Node 24).

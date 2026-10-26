@@ -31,7 +31,7 @@ const records = [
 );
 const logo =
   "data:image/png;base64," +
-  (await readFile("public/shemberg-logo.png")).toString("base64");
+  (await readFile("src/assets/shemberg-logo.png")).toString("base64");
 const model = reportModel(records, logo, new Date("2026-10-27T09:00:00Z"));
 test("Excel is a valid workbook with box totals, product totals, logo and lossless source reimport", async () => {
   const blob = await excelReport(model),
