@@ -8,6 +8,24 @@ Download **standalone/Shemberg-Inventory.html**, save it on your computer, and o
 
 Keep the HTML at the same file location and use the same browser profile. Browser storage is specific to the browser/site or local file location. Export unfiltered Excel backups regularly; moving the file, changing browsers or clearing browser data may show an empty inventory. The app is a local, single-browser workspace, without shared accounts or cloud synchronization.
 
+## Correct an import, batch or box (v1.1)
+
+Each new import is saved as a named batch, using the filename as its initial name. **Manage imports / batches** lists all saved batches with their timestamp, record count and quantity. Open a batch to edit shared information, replace it with a corrected CSV/Excel file, or delete it. Older and manually entered records without batch metadata appear under **Existing / manual records (batch unknown)**; their original import boundaries are not guessed.
+
+Every box heading now has **Manage box**. This targets all originals for that box within the selected inventory session (or all inventory sessions if selected), including records hidden by a search or sample-date filter. The dialog shows the exact number and all affected originals. You can change the box label, inventory date, known bundle/group, sample type or status. Check only the fields to overwrite; quantities, sample dates and complete remarks are kept. Batch names can be changed through batch management. To fix individual quantities or remarks, expand source entries or use Original records and click Edit.
+
+**Reimport to replace** previews the corrected file and explicitly shows how many existing originals will be replaced. It excludes the target originals from duplicate detection, so unchanged rows in the correction are not accidentally treated as already saved. Replacement defaults to retaining all preview rows, including possible duplicates; review them before confirmation. Only the selected batch/box originals are removed; other records remain untouched. Box replacements must match that box and the selected inventory session. Use bulk edit first if renaming a box. File errors, cancellation, an empty replacement selection or failed storage writes leave existing records intact. Reimporting a backup as a new import creates a new named batch; original tracking columns remain in exported backups.
+
+Delete requires confirmation of the full scope. **Undo last inventory change** restores one previous inventory state (add, edit, bulk edit, import, replacement or deletion) until the page is refreshed. Undo itself saves the restored records, but the undo history is not retained after refresh. Maintain Excel backups for longer-term recovery.
+
+## Bundle and loose-sample tracking
+
+Optional entry fields and spreadsheet columns **Bundle ID**, **Sample Type** and **Bundle Status** track physical grouping. Status values in spreadsheets are `bundled`, `loose` or `unknown`; the UI labels them In bundle, Loose / separated from bundle and Unknown. Sheet-header defaults apply when those columns are absent; an explicitly blank Bundle ID remains unidentified. Do not assign a bundle based solely on matching code, date or remarks.
+
+Consolidation now requires matching **box + inventory date + sample date + sample code + known Bundle ID + known Sample Type + bundle status**. Rows without a known bundle ID or type remain separate until you explicitly assign a shared confirmed bundle/group and type. Loose stock never merges with stock still in a bundle. Loose items with a known common origin can use that confirmed group ID and loose status. Bundle IDs and types match exactly, including capitalization, to avoid assuming two labels identify the same group; sample codes retain case-insensitive matching and original text is kept.
+
+Different remarks do **not** prevent consolidation when all those identities match. Instead, each row shows a quantity and source-count breakdown per distinct remark, and every original remains accessible—including repeated and empty remarks. The screen and all three exports include bundle/type/status tracking, original remarks, source quantities, and the remark quantity breakdown. Bundle status can be filtered, and search covers bundle IDs and types. Existing quantities are unchanged by this upgrade; unidentified legacy rows may appear as more consolidated rows because their bundle membership is no longer assumed.
+
 ## Sheet workflow
 
 1. Set **Box Number** and **Date of Inventory (session)** in the sheet header. The box may be blank; that explicitly means unassigned.
@@ -19,7 +37,7 @@ Keep the HTML at the same file location and use the same browser profile. Browse
 
 ### Consolidation rules
 
-Combine only the same **box + inventory session date + sample date + sample name/code**. Different sample dates stay separate even when the sample name/code repeats. Different inventory session dates and different boxes also stay separate. Every original source record, quantity and remark remains available. Different remarks are preserved together; descriptions remain in original records and overall sample summaries. Sample-code matching is case-insensitive while original capitalization is preserved.
+Combine only the same **box + inventory session date + sample date + sample name/code + known bundle ID + known sample type + bundle status**. Different sample dates, bundles, types and statuses stay separate even when the sample name/code repeats. Different inventory session dates and different boxes also stay separate. Every original source record, quantity and remark remains available. Different remarks are preserved together; descriptions remain in original records and overall sample summaries. Sample-code matching is case-insensitive while original capitalization is preserved.
 
 Boxes sort naturally (1, 2, 10); unassigned stock is last under **UNASSIGNED BOX**. Numeric box aliases such as 001 and 1 identify the same box, retaining original labels in source records; text labels such as `1 (Brown)` and `1 (White)` remain separate. Legacy saved records with no sample date are labeled NOT RECORDED and never merged with another source record; no sample date is inferred from the inventory session date. New entry/import requires a valid sample date.
 
@@ -55,7 +73,7 @@ Excel reports from this app automatically reimport the **Original Records** work
 
 Screen and reports share the same calculation functions. Default order is box, sample date, sample name/code, then inventory date as a tiebreaker. Alternate screen sorting does not change the report order. All formats include box headings/totals, source counts, complete remarks, a grand total, overall sample summary, original records, distinct inventory dates/entry timestamps/generation timestamp and logo.
 
-- **Excel (.xlsx)**: Box Inventory, Product Summary (overall sample totals) and Original Records worksheets. Dated rows contain Date, Samples, Quantity, Source Entries, Remarks and Date of Inventory; quantities and totals are numeric cells in matching columns.
+- **Excel (.xlsx)**: Box Inventory, Product Summary (overall sample totals) and Original Records worksheets. Dated rows contain Date, Samples, Quantity, Source Entries, Remarks, Date of Inventory, Bundle ID, Sample Type, Bundle Status and Remarks quantity breakdown; quantities and totals are numeric cells in matching columns.
 - **Word (.docx)**: box headings with readable tables, repeating table headers, subtotals, sample summary and original-record appendix. Box headings stay with the next table where practical.
 - **PDF**: landscape tables, pagination, repeating headers, box totals, original-record appendix and grand total; space is reserved below box headings when practical. Large boxes may continue across pages.
 

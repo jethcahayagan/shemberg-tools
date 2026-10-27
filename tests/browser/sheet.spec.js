@@ -3,6 +3,9 @@ test("sheet columns, original values, sample date consolidation, session isolati
   page,
 }) => {
   await page.goto("/");
+  await page.locator("#entry-bundle").fill("Group-A");
+  await page.locator("#entry-type").fill("paste");
+  await page.locator("#entry-status").selectOption("bundled");
   await page.locator("#inventory-session-date").fill("2026-10-24");
   await page.locator("#entry-box").fill("1 (Brown)");
   await page.locator("#add").click();
@@ -15,13 +18,11 @@ test("sheet columns, original values, sample date consolidation, session isolati
   await page.getByRole("button", { name: "Save record", exact: true }).click();
   const csv =
     "Date,Samples,Quantity,Remarks\n2025-06-01,Mixed Sample,3,Second remark\n2025-06-02,Mixed Sample,4,Different day\n2025-05-01,Earlier sample,1,Oldest first\n";
-  await page
-    .locator("#import-file")
-    .setInputFiles({
-      name: "sheet.csv",
-      mimeType: "text/csv",
-      buffer: Buffer.from(csv),
-    });
+  await page.locator("#import-file").setInputFiles({
+    name: "sheet.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(csv),
+  });
   await expect(page.locator("#import-preview")).toContainText("1 (Brown)");
   await expect(page.locator("#import-preview")).toContainText("2026-10-24");
   await expect(page.locator("#import-summary")).toContainText(
@@ -51,15 +52,13 @@ test("sheet columns, original values, sample date consolidation, session isolati
   ).toHaveCount(4);
   await expect(box.getByText("Mixed Sample", { exact: true })).toHaveCount(3);
   await page.locator("#inventory-session-date").fill("2026-10-25");
-  await page
-    .locator("#import-file")
-    .setInputFiles({
-      name: "next-session.csv",
-      mimeType: "text/csv",
-      buffer: Buffer.from(
-        "Date,Samples,Quantity,Remarks\n2025-06-01,Mixed Sample,7,Recount next day\n",
-      ),
-    });
+  await page.locator("#import-file").setInputFiles({
+    name: "next-session.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(
+      "Date,Samples,Quantity,Remarks\n2025-06-01,Mixed Sample,7,Recount next day\n",
+    ),
+  });
   await page.locator("#confirm-import").click();
   await page.locator("#view").selectOption("consolidated");
   await expect(

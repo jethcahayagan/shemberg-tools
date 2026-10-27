@@ -7,6 +7,9 @@ test("data entry, persistence, filters, editing, imports, branded downloads and 
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
+  await page.locator("#entry-bundle").fill("Group-A");
+  await page.locator("#entry-type").fill("paste");
+  await page.locator("#entry-status").selectOption("bundled");
   await expect(page.getByText("Your inventory starts here")).toBeVisible();
   async function add(qty, box = "001", remarks = "") {
     await page.locator("#add").click();

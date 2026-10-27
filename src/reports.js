@@ -12,7 +12,13 @@ import {
 } from "docx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { summarize, parseCSV, importRows, sortOriginals } from "./core.js";
+import {
+  summarize,
+  parseCSV,
+  importRows,
+  sortOriginals,
+  statusLabel,
+} from "./core.js";
 export const columns = [
   "Date",
   "Samples",
@@ -20,6 +26,10 @@ export const columns = [
   "Source Entries",
   "Remarks",
   "Date of Inventory",
+  "Bundle ID",
+  "Sample Type",
+  "Bundle Status",
+  "Remarks quantity breakdown",
 ];
 export function reportModel(records, logo, now = new Date()) {
   return {
@@ -40,6 +50,15 @@ export const rowValues = (r) => [
   r.sources.length,
   r.remarks.join(" | "),
   r.date,
+  r.bundle || "Unidentified",
+  r.type || "Unspecified",
+  statusLabel(r.bundleStatus),
+  r.remarkBreakdown
+    .map(
+      (d) =>
+        `${d.quantity} units (${d.count} entries): ${d.remarks || "No remarks"}`,
+    )
+    .join("\n"),
 ];
 const originalHeaders = [
   "Date of Inventory",
@@ -51,6 +70,11 @@ const originalHeaders = [
   "Description (optional)",
   "Entry Timestamp",
   "Record ID",
+  "Bundle ID",
+  "Sample Type",
+  "Bundle Status",
+  "Batch ID",
+  "Import Batch",
 ];
 const originalValues = (r) => [
   r.date,
@@ -62,6 +86,41 @@ const originalValues = (r) => [
   r.description,
   r.sessionAt || "",
   r.id || "",
+  r.bundle || "",
+  r.type || "",
+  r.bundleStatus || "unknown",
+  r.batchId || "",
+  r.batchName || "",
+];
+const originalPrintHeaders = [
+  "Inventory date",
+  "Sample date",
+  "Samples",
+  "Quantity",
+  "Box",
+  "Remarks",
+  "Tracking / provenance",
+  "Entry timestamp",
+];
+const originalPrintValues = (r) => [
+  r.date,
+  r.sampleDate || "NOT RECORDED",
+  r.code,
+  r.quantity,
+  r.box || "UNASSIGNED BOX",
+  r.remarks,
+  [
+    `Bundle: ${r.bundle || "Unidentified"}`,
+    `Type: ${r.type || "Unspecified"}`,
+    `Status: ${statusLabel(r.bundleStatus)}`,
+    `Batch: ${r.batchName || "Existing / manual records"}`,
+    `Batch ID: ${r.batchId || "Unknown"}`,
+    `Record ID: ${r.id || "Unknown"}`,
+    r.description,
+  ]
+    .filter(Boolean)
+    .join("\n"),
+  r.sessionAt || "Not recorded",
 ];
 export function saveBlob(blob, name) {
   const url = URL.createObjectURL(blob),
@@ -86,6 +145,10 @@ export async function excelReport(m) {
     { width: 16 },
     { width: 55 },
     { width: 20 },
+    { width: 22 },
+    { width: 20 },
+    { width: 24 },
+    { width: 60 },
   ];
   if (m.logo) {
     const id = wb.addImage({ base64: m.logo, extension: "png" });
@@ -137,7 +200,9 @@ export async function excelReport(m) {
   const originals = wb.addWorksheet("Original Records");
   originals.addRow(originalHeaders);
   m.records.forEach((r) => originals.addRow(originalValues(r)));
-  originals.columns = [20, 18, 25, 14, 18, 55, 40, 30, 40].map((width) => ({
+  originals.columns = [
+    20, 18, 25, 14, 18, 55, 40, 30, 40, 22, 22, 20, 40, 30,
+  ].map((width) => ({
     width,
   }));
   return new Blob([await wb.xlsx.writeBuffer()], {
@@ -245,7 +310,7 @@ export async function wordReport(m) {
       ]),
     ),
     p("Original records", HeadingLevel.HEADING_1),
-    table(originalHeaders, m.records.map(originalValues)),
+    table(originalPrintHeaders, m.records.map(originalPrintValues)),
     p(`GRAND TOTAL: ${m.quantity} units`, HeadingLevel.HEADING_1),
   );
   return Packer.toBlob(
@@ -320,7 +385,7 @@ export function pdfReport(m) {
     ]),
   );
   line("Original records", 14);
-  table(originalHeaders, m.records.map(originalValues));
+  table(originalPrintHeaders, m.records.map(originalPrintValues));
   line(`GRAND TOTAL: ${m.quantity} units`, 15);
   const pages = pdf.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {

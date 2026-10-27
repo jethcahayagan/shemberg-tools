@@ -12,6 +12,15 @@ export function normalize(input) {
     description = String(input.description ?? "").trim(),
     box = String(input.box ?? "").trim(),
     remarks = String(input.remarks ?? "");
+  const bundle = String(input.bundle ?? "").trim(),
+    type = String(input.type ?? "").trim();
+  const bundleStatus = String(input.bundleStatus || "unknown")
+    .trim()
+    .toLowerCase();
+  if (!["bundled", "loose", "unknown"].includes(bundleStatus))
+    throw Error("Bundle Status must be bundled, loose, or unknown.");
+  if (bundle.length > 100 || type.length > 100)
+    throw Error("Bundle ID and Sample Type must be at most 100 characters.");
   const quantity = Number(input.quantity);
   const sampleDate = String(input.sampleDate ?? "").trim();
   if (
@@ -50,6 +59,9 @@ export function normalize(input) {
     box,
     remarks,
     sampleDate,
+    bundle,
+    type,
+    bundleStatus,
   };
 }
 export function fingerprint(r) {
@@ -61,6 +73,9 @@ export function fingerprint(r) {
     boxKey(r.box),
     r.remarks,
     r.sampleDate || "",
+    r.bundle || "",
+    r.type || "",
+    r.bundleStatus || "unknown",
   ]);
 }
 export function compareSamples(a, b) {
@@ -98,16 +113,24 @@ export function consolidate(records) {
         r.date,
         r.sampleDate || `undated-original-${index}`,
         r.code.toUpperCase(),
+        r.bundle || "",
+        r.type || "",
+        r.bundleStatus || "unknown",
+        r.bundle && r.type ? "" : `unidentified-source-${index}`,
       ]);
     if (!b.entries.has(k))
       b.entries.set(k, {
         date: r.date,
         sampleDate: r.sampleDate,
         code: r.code,
+        bundle: r.bundle || "",
+        type: r.type || "",
+        bundleStatus: r.bundleStatus || "unknown",
         quantity: 0,
         sources: [],
         descriptions: [],
         remarks: [],
+        remarkBreakdown: [],
       });
     const row = b.entries.get(k);
     row.quantity += r.quantity;
@@ -115,6 +138,13 @@ export function consolidate(records) {
     if (!row.descriptions.includes(r.description))
       row.descriptions.push(r.description);
     if (r.remarks) row.remarks.push(r.remarks);
+    let detail = row.remarkBreakdown.find((x) => x.remarks === r.remarks);
+    if (!detail) {
+      detail = { remarks: r.remarks, quantity: 0, count: 0 };
+      row.remarkBreakdown.push(detail);
+    }
+    detail.quantity += r.quantity;
+    detail.count++;
     b.total += r.quantity;
   }
   return [...boxes.values()]
@@ -205,6 +235,11 @@ const aliases = {
   quantity: ["quantity", "qty", "units"],
   box: ["boxnumber", "boxno", "box"],
   remarks: ["remarks", "notes"],
+  bundle: ["bundleid", "bundlenumber", "bundleno", "bundle", "bundlegroup"],
+  type: ["sampletype", "type", "producttype"],
+  bundleStatus: ["bundlestatus", "status"],
+  batchName: ["importbatch", "batchname"],
+  batchId: ["batchid"],
   sampleDate: ["sampledate", "date", "preparationdate"],
   sessionAt: [
     "entrytimestamp",
@@ -243,6 +278,8 @@ export function importRows(rows, defaults = {}) {
         );
         if (mapping.date < 0) r.date = defaults.inventoryDate || "";
         if (mapping.box < 0) r.box = defaults.box || "";
+        for (const key of ["bundle", "type", "bundleStatus"])
+          if (mapping[key] < 0) r[key] = defaults[key] || "";
         if (!defaults.allowUndated && !String(r.sampleDate ?? "").trim())
           throw Error("Date (sample date) is required.");
         if (!r.date)
@@ -273,4 +310,56 @@ export function importRows(rows, defaults = {}) {
         throw Error(`Row ${i + 2}: ${e.message}`);
       }
     });
+}
+
+export const statusLabel = (value) =>
+  ({
+    bundled: "In bundle",
+    loose: "Loose / separated from bundle",
+    unknown: "Unknown",
+  })[value || "unknown"];
+export function importBatches(records) {
+  const groups = new Map();
+  for (const r of records) {
+    const id = r.batchId || "__legacy__";
+    if (!groups.has(id))
+      groups.set(id, {
+        id,
+        name:
+          r.batchName ||
+          (id === "__legacy__"
+            ? "Existing / manual records (batch unknown)"
+            : "Imported batch"),
+        records: [],
+        createdAt: r.importedAt || "",
+      });
+    groups.get(id).records.push(r);
+  }
+  return [...groups.values()].map((b) => ({
+    ...b,
+    quantity: b.records.reduce((n, r) => n + r.quantity, 0),
+  }));
+}
+export function replaceScope(records, ids, incoming) {
+  const target = new Set(ids);
+  if (!target.size || !records.some((r) => target.has(r.id)))
+    throw Error("The selected batch or box no longer exists.");
+  if (!incoming.length)
+    throw Error("No replacement rows selected. Existing records were kept.");
+  return [
+    ...records.filter((r) => !target.has(r.id)),
+    ...incoming.map(normalize),
+  ];
+}
+export function updateScope(records, ids, changes) {
+  const target = new Set(ids),
+    allowed = ["box", "date", "bundle", "type", "bundleStatus", "batchName"];
+  const patch = Object.fromEntries(
+    Object.entries(changes).filter(([k]) => allowed.includes(k)),
+  );
+  return records.map((r) =>
+    target.has(r.id)
+      ? normalize({ ...r, ...patch, updatedAt: new Date().toISOString() })
+      : r,
+  );
 }

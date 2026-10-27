@@ -816,3 +816,49 @@ dialog.large {
     min-width: 0;
   }
 }
+.box-heading {
+  flex-wrap: wrap;
+}
+.box-heading > button {
+  font-size: 10px;
+  padding: 6px 9px;
+  margin-left: auto;
+}
+.box-heading .box-units {
+  margin-left: 0;
+}
+.tracking {
+  min-width: 140px;
+  color: #6f817a;
+  font-size: 11px;
+}
+.remark-breakdown {
+  padding: 12px 12px 12px 30px;
+  background: #f1f8f4;
+  white-space: pre-wrap;
+  font-size: 11px;
+  min-width: 260px;
+}
+.bulk-field > input,
+.bulk-field > select {
+  width: 100%;
+}
+.batch-name-label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 14px 0;
+}
+.batch-name-label input {
+  max-width: 500px;
+}
+#undo {
+  margin-bottom: 12px;
+  background: #fff4d7;
+}
+#scope-records {
+  margin-top: 12px;
+}
+[hidden] {
+  display: none !important;
+}

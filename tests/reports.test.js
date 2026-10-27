@@ -23,6 +23,9 @@ const records = [
     sampleDate: "2025-03-26",
     code: "LB-2210",
     description: "Toothpaste sample",
+    bundle: "Group-A",
+    type: "paste",
+    bundleStatus: "bundled",
     box,
     quantity,
     remarks,
@@ -122,6 +125,9 @@ test("raw sheet Excel imports with separate sheet metadata; reports keep differe
   const imported = await readInventoryFile(file, {
     inventoryDate: "2026-10-24",
     box: "3 (Blue)",
+    bundle: "Group-A",
+    type: "gel",
+    bundleStatus: "bundled",
   });
   assert.equal(imported[0].code, "Mixed-case sample");
   assert.equal(imported[0].date, "2026-10-24");
@@ -173,4 +179,76 @@ test("raw sheet Excel imports with separate sheet metadata; reports keep differe
     "GRAND TOTAL: 15 units",
   ])
     assert.ok(pdf.includes(v), v);
+});
+
+test("tracking metadata and remark quantities survive every report and Excel original reimport", async () => {
+  const data = [
+    normalize({
+      ...records[0],
+      bundle: "Batch-X",
+      type: "gel",
+      bundleStatus: "loose",
+      remarks: "Found apart",
+      quantity: 2,
+      batchId: "import-123",
+      batchName: "Box 1 import",
+    }),
+    normalize({
+      ...records[0],
+      id: "second",
+      bundle: "Batch-X",
+      type: "gel",
+      bundleStatus: "loose",
+      remarks: "Broken packet",
+      quantity: 3,
+      batchId: "import-123",
+      batchName: "Box 1 import",
+    }),
+  ];
+  const m = reportModel(data, logo);
+  const blob = await excelReport(m);
+  const file = new File([await blob.arrayBuffer()], "tracking.xlsx");
+  const imported = await readInventoryFile(file);
+  assert.equal(imported[0].bundle, "Batch-X");
+  assert.equal(imported[0].type, "gel");
+  assert.equal(imported[0].bundleStatus, "loose");
+  assert.equal(imported[0].batchId, "import-123");
+  assert.equal(imported[0].batchName, "Box 1 import");
+  assert.equal(summarize(imported).consolidatedCount, 1);
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(await blob.arrayBuffer());
+  let values;
+  wb.getWorksheet("Box Inventory").eachRow((row) => {
+    if (row.getCell(2).value === "LB-2210") values = row.values.slice(1);
+  });
+  assert.equal(values[6], "Batch-X");
+  assert.equal(values[7], "gel");
+  assert.equal(values[8], "Loose / separated from bundle");
+  assert.equal(
+    values[9],
+    "2 units (1 entries): Found apart\n3 units (1 entries): Broken packet",
+  );
+  const zip = await JSZip.loadAsync(await (await wordReport(m)).arrayBuffer()),
+    xml = await zip.file("word/document.xml").async("string");
+  for (const text of [
+    "Batch-X",
+    "gel",
+    "Loose / separated from bundle",
+    "Box 1 import",
+    "Found apart",
+    "Broken packet",
+    "2 units",
+    "3 units",
+  ])
+    assert.ok(xml.includes(text), text);
+  const pdf = Buffer.from(await pdfReport(m).arrayBuffer()).toString("latin1");
+  for (const text of [
+    "Batch-X",
+    "gel",
+    "Loose / separated from bundle",
+    "Box 1 import",
+    "Found apart",
+    "Broken packet",
+  ])
+    assert.ok(pdf.includes(text), text);
 });

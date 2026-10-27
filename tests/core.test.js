@@ -25,6 +25,9 @@ const r = (
     remarks,
     date,
     description: "",
+    bundle: "Group-A",
+    type: "paste",
+    bundleStatus: "bundled",
   });
 test("same box, sample date, inventory session date and sample consolidate with original quantities and all remarks", () => {
   const data = [
