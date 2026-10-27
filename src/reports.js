@@ -13,17 +13,7 @@ import {
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { summarize, parseCSV, importRows, sortOriginals } from "./core.js";
-export const columns = [
-  "Date",
-  "Samples",
-  "Quantity",
-  "Source Entries",
-  "Remarks",
-  "Date of Inventory",
-  "Bundle ID",
-  "Sample Type",
-  "Remarks quantity breakdown",
-];
+export const columns = ["Date", "Samples", "Quantity", "Remarks"];
 export function reportModel(records, logo, now = new Date()) {
   return {
     ...summarize(records),
@@ -36,22 +26,26 @@ export function reportModel(records, logo, now = new Date()) {
     ].sort(),
   };
 }
-export const rowValues = (r) => [
-  r.sampleDate || "NOT RECORDED",
-  r.code,
-  r.quantity,
-  r.sources.length,
-  r.remarks.join(" | "),
-  r.date,
-  r.bundle || "Unidentified",
-  r.type || "Unspecified",
-  r.remarkBreakdown
-    .map(
-      (d) =>
-        `${d.quantity} units (${d.count} entries): ${d.remarks || "No remarks"}`,
-    )
-    .join("\n"),
-];
+export function rowValues(r, includeInventoryDate = false) {
+  const remarks =
+    r.sources.length > 1
+      ? r.remarkBreakdown
+          .map((d) => `${d.quantity} units — ${d.remarks || "No remarks"}`)
+          .join("\n") + `\n(${r.sources.length} original entries)`
+      : r.remarks.join("\n");
+  return [
+    r.sampleDate || "NOT RECORDED",
+    r.code,
+    r.quantity,
+    [
+      r.type ? `Type: ${r.type}` : "",
+      includeInventoryDate ? `Inventory: ${r.date}` : "",
+      remarks,
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  ];
+}
 const originalHeaders = [
   "Date of Inventory",
   "Date",
@@ -86,39 +80,22 @@ const originalValues = (r) => [
   r.batchId || "",
   r.batchName || "",
 ];
-const originalPrintHeaders = [
-  "Inventory date",
-  "Sample date",
-  "Samples",
-  "Quantity",
-  "Box",
-  "Remarks",
-  "Tracking / provenance",
-  "Entry timestamp",
-];
 const originalPrintValues = (r) => [
-  r.date,
   r.sampleDate || "NOT RECORDED",
   r.code,
   r.quantity,
-  r.box || "UNASSIGNED BOX",
   r.remarks,
-  [
-    `Bundle: ${r.bundle || "Unidentified"}`,
-    `Type: ${r.type || "Unspecified"}`,
-    ...(r.originalBundle
-      ? [`Original bundle reference: ${r.originalBundle}`]
-      : []),
-    ...(r.bundleStatus ? [`Legacy tracking note: ${r.bundleStatus}`] : []),
-    `Batch: ${r.batchName || "Existing / manual records"}`,
-    `Batch ID: ${r.batchId || "Unknown"}`,
-    `Record ID: ${r.id || "Unknown"}`,
-    r.description,
-  ]
-    .filter(Boolean)
-    .join("\n"),
-  r.sessionAt || "Not recorded",
 ];
+export function originalSections(m) {
+  const groups = new Map();
+  for (const r of m.records) {
+    const key = JSON.stringify([r.box, r.date]);
+    if (!groups.has(key))
+      groups.set(key, { box: r.box, date: r.date, records: [] });
+    groups.get(key).records.push(r);
+  }
+  return [...groups.values()];
+}
 export function saveBlob(blob, name) {
   const url = URL.createObjectURL(blob),
     a = document.createElement("a");
@@ -135,17 +112,13 @@ export async function excelReport(m) {
   wb.creator = "Shemberg Inventory";
   wb.created = new Date(m.generatedAt);
   const ws = wb.addWorksheet("Box Inventory");
-  ws.columns = [
-    { width: 18 },
-    { width: 20 },
-    { width: 14 },
-    { width: 16 },
-    { width: 55 },
-    { width: 20 },
-    { width: 22 },
-    { width: 20 },
-    { width: 60 },
-  ];
+  ws.columns = [{ width: 18 }, { width: 32 }, { width: 14 }, { width: 85 }];
+  ws.pageSetup = {
+    orientation: "portrait",
+    fitToPage: true,
+    fitToWidth: 1,
+    fitToHeight: 0,
+  };
   if (m.logo) {
     const id = wb.addImage({ base64: m.logo, extension: "png" });
     ws.addImage(id, {
@@ -163,14 +136,8 @@ export async function excelReport(m) {
     "Unique products",
     m.products.length,
   ]);
-  ws.addRow([
-    "Total units",
-    m.quantity,
-    "Original records",
-    m.originalCount,
-    "Consolidated records",
-    m.consolidatedCount,
-  ]);
+  ws.addRow(["Total units", m.quantity, "Original records", m.originalCount]);
+  ws.addRow(["Consolidated records", m.consolidatedCount]);
   ws.addRow(["Dates of Inventory", m.inventoryDates.join(", ")]);
   ws.addRow(["Entry timestamps (not report generation)"]);
   for (const s of m.sessions) ws.addRow([s]);
@@ -178,8 +145,13 @@ export async function excelReport(m) {
     ws.addRow([]);
     const h = ws.addRow([b.key ? `BOX NO. ${b.label}` : "UNASSIGNED BOX"]);
     h.font = { bold: true, color: { argb: "FF087F72" }, size: 14 };
+    ws.addRow([
+      "Date of Inventory",
+      [...new Set(b.rows.map((r) => r.date))].sort().join(", "),
+    ]);
     ws.addRow(columns).font = { bold: true };
-    for (const r of b.rows) ws.addRow(rowValues(r));
+    for (const r of b.rows)
+      ws.addRow(rowValues(r, m.inventoryDates.length > 1));
     ws.addRow(["BOX TOTAL", "", b.total]).font = { bold: true };
   }
   ws.addRow(["GRAND TOTAL", "", m.quantity]).font = { bold: true };
@@ -187,12 +159,10 @@ export async function excelReport(m) {
     row.alignment = { vertical: "top", wrapText: true };
   ws.views = [{ state: "frozen", ySplit: 1 }];
   const products = wb.addWorksheet("Product Summary");
-  products.addRow(["Samples", "Description (optional)", "Quantity"]);
-  m.products.forEach((p) =>
-    products.addRow([p.code, [...p.descriptions].join(" / "), p.quantity]),
-  );
-  products.addRow(["GRAND TOTAL", "", m.quantity]);
-  products.columns = [{ width: 22 }, { width: 55 }, { width: 18 }];
+  products.addRow(["Samples", "Total quantity"]);
+  m.products.forEach((p) => products.addRow([p.code, p.quantity]));
+  products.addRow(["GRAND TOTAL", m.quantity]);
+  products.columns = [{ width: 40 }, { width: 20 }];
   const originals = wb.addWorksheet("Original Records");
   originals.addRow(originalHeaders);
   m.records.forEach((r) => originals.addRow(originalValues(r)));
@@ -201,6 +171,9 @@ export async function excelReport(m) {
   ].map((width) => ({
     width,
   }));
+  originals.columns.forEach((column, index) => {
+    if (index >= 6) column.hidden = true;
+  });
   return new Blob([await wb.xlsx.writeBuffer()], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
@@ -291,22 +264,30 @@ export async function wordReport(m) {
         heading: HeadingLevel.HEADING_1,
         keepNext: true,
       }),
-      table(columns, b.rows.map(rowValues)),
+      p(
+        `Date of Inventory: ${[...new Set(b.rows.map((r) => r.date))].sort().join(", ")}`,
+      ),
+      table(
+        columns,
+        b.rows.map((r) => rowValues(r, m.inventoryDates.length > 1)),
+      ),
       p(`BOX TOTAL: ${b.total} units`),
     );
   children.push(
     p(`GRAND TOTAL: ${m.quantity} units`, HeadingLevel.HEADING_1),
     p("Overall product summary", HeadingLevel.HEADING_1),
     table(
-      ["Samples", "Description (optional)", "Quantity"],
-      m.products.map((p) => [
-        p.code,
-        [...p.descriptions].join(" / "),
-        p.quantity,
-      ]),
+      ["Samples", "Total quantity"],
+      m.products.map((p) => [p.code, p.quantity]),
     ),
     p("Original records", HeadingLevel.HEADING_1),
-    table(originalPrintHeaders, m.records.map(originalPrintValues)),
+    ...originalSections(m).flatMap((group) => [
+      p(
+        `${group.box ? `BOX NO. ${group.box}` : "UNASSIGNED BOX"} · Date of Inventory: ${group.date}`,
+        HeadingLevel.HEADING_2,
+      ),
+      table(columns, group.records.map(originalPrintValues)),
+    ]),
     p(`GRAND TOTAL: ${m.quantity} units`, HeadingLevel.HEADING_1),
   );
   return Packer.toBlob(
@@ -315,7 +296,7 @@ export async function wordReport(m) {
         {
           properties: {
             page: {
-              size: { orientation: "landscape", width: 15840, height: 12240 },
+              size: { orientation: "portrait", width: 12240, height: 15840 },
             },
           },
           children,
@@ -325,15 +306,15 @@ export async function wordReport(m) {
   );
 }
 export function pdfReport(m) {
-  const pdf = new jsPDF({ orientation: "landscape" });
+  const pdf = new jsPDF({ orientation: "portrait" });
   let y = 18;
   const line = (text, size = 10) => {
-    if (y > 185) {
+    if (y > 275) {
       pdf.addPage();
       y = 18;
     }
     pdf.setFontSize(size);
-    const lines = pdf.splitTextToSize(text, 265);
+    const lines = pdf.splitTextToSize(text, 180);
     pdf.text(lines, 14, y);
     y += lines.length * (size * 0.45) + 4;
   };
@@ -362,32 +343,44 @@ export function pdfReport(m) {
     y = pdf.lastAutoTable.finalY + 8;
   };
   for (const b of m.boxes) {
-    if (y > 155) {
+    if (y > 245) {
       pdf.addPage();
       y = 18;
     }
     line(b.key ? `BOX NO. ${b.label}` : "UNASSIGNED BOX", 14);
-    table(columns, b.rows.map(rowValues));
+    line(
+      `Date of Inventory: ${[...new Set(b.rows.map((r) => r.date))].sort().join(", ")}`,
+    );
+    table(
+      columns,
+      b.rows.map((r) => rowValues(r, m.inventoryDates.length > 1)),
+    );
     line(`BOX TOTAL: ${b.total} units`, 12);
   }
   line(`GRAND TOTAL: ${m.quantity} units`, 15);
   line("Overall product summary", 14);
   table(
-    ["Samples", "Description (optional)", "Quantity"],
-    m.products.map((p) => [
-      p.code,
-      [...p.descriptions].join(" / "),
-      p.quantity,
-    ]),
+    ["Samples", "Total quantity"],
+    m.products.map((p) => [p.code, p.quantity]),
   );
   line("Original records", 14);
-  table(originalPrintHeaders, m.records.map(originalPrintValues));
+  for (const group of originalSections(m)) {
+    if (y > 245) {
+      pdf.addPage();
+      y = 18;
+    }
+    line(
+      `${group.box ? `BOX NO. ${group.box}` : "UNASSIGNED BOX"} | Date of Inventory: ${group.date}`,
+      12,
+    );
+    table(columns, group.records.map(originalPrintValues));
+  }
   line(`GRAND TOTAL: ${m.quantity} units`, 15);
   const pages = pdf.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     pdf.setPage(i);
     pdf.setFontSize(8);
-    pdf.text(`Shemberg inventory | Page ${i} of ${pages}`, 14, 203);
+    pdf.text(`Shemberg inventory | Page ${i} of ${pages}`, 14, 285);
   }
   return pdf.output("blob");
 }

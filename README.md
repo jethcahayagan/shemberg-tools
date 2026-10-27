@@ -18,11 +18,17 @@ Every box heading now has **Manage box**. This targets all originals for that bo
 
 Delete requires confirmation of the full scope. **Undo last inventory change** restores one previous inventory state (add, edit, bulk edit, import, replacement or deletion) until the page is refreshed. Undo itself saves the restored records, but the undo history is not retained after refresh. Maintain Excel backups for longer-term recovery.
 
-## Automatic bundles (v1.3)
+## Simple sheet format (v1.4)
 
-Within a box and inventory session, **the same sample code and sample date automatically identify one bundle**. The app derives a read-only Bundle ID such as `SAMPLE-A · 2025-06-01`; there is no manual bundle assignment or bundled/loose status to fill out. This applies to manual entry, spreadsheet imports, saved records and every export. Missing manual IDs do not prevent consolidation. All original quantities and remarks remain accessible with a quantity/count breakdown per distinct remark.
+The entry form, import preview, inventory view, original-records view and printed inventory tables follow **Date | Samples | Quantity | Remarks**. Box Number and Date of Inventory are shown above each table. Encode unsorted rows as written; the app sorts and consolidates them automatically. No extra bundle columns or labels are needed in the input file. Additional type/description fields are tucked inside an optional details section for existing data; there is no separate required type field in the normal sheet workflow.
 
-**Sample Type** is the only additional tracking input. If types are supplied, different types stay as separate detailed rows inside the same automatic bundle. Two blank types match without guessing a type. Different boxes, inventory dates and sample dates never consolidate. Sample-code matching is case-insensitive; the original spelling is preserved. Type matching retains exact values. Missing historical sample dates are labeled NOT RECORDED and kept separate rather than guessed.
+In the consolidated view, expand Remarks to see the quantity associated with every remark, all original entries, and their Edit/Delete controls. The original-records view shows every source row directly. Edit, delete, box correction and reimport features are retained. Reports keep the same four-column format and include an original-record appendix for verification.
+
+## Automatic bundles
+
+Within a box and inventory session, **the same sample code and sample date automatically identify one bundle**. The app handles bundle grouping internally; no bundle ID or bundled/loose status is shown or required in the sheet format. This applies to manual entry, spreadsheet imports, saved records and every export. Missing manual IDs do not prevent consolidation. All original quantities and remarks remain accessible with a quantity/count breakdown per distinct remark.
+
+**Sample Type**, when already present in a file or supplied through Additional details, is optional. If types are supplied, different types stay as separate detailed rows inside the same automatic bundle. Two blank types match without guessing a type. Different boxes, inventory dates and sample dates never consolidate. Sample-code matching is case-insensitive; the original spelling is preserved. Type matching retains exact values. Missing historical sample dates are labeled NOT RECORDED and kept separate rather than guessed.
 
 Older manual bundle references remain preserved as **Original Bundle ID** in original records and backups. Historical status labels are retained only as legacy backup metadata; they are no longer controls, filters or consolidation criteria. Existing remarks, quantities, import batches and box-management features remain available. These changes can reduce the displayed consolidated-row count without changing any original quantity.
 
@@ -73,9 +79,9 @@ Excel reports from this app automatically reimport the **Original Records** work
 
 Screen and reports share the same calculation functions. Default order is box, sample date, sample name/code, then inventory date as a tiebreaker. Alternate screen sorting does not change the report order. All formats include box headings/totals, source counts, complete remarks, a grand total, overall sample summary, original records, distinct inventory dates/entry timestamps/generation timestamp and logo.
 
-- **Excel (.xlsx)**: Box Inventory, Product Summary (overall sample totals) and Original Records worksheets. Dated rows contain Date, Samples, Quantity, Source Entries, Remarks, Date of Inventory, Bundle ID, Sample Type and Remarks quantity breakdown; quantities and totals are numeric cells in matching columns.
-- **Word (.docx)**: box headings with readable tables, repeating table headers, subtotals, sample summary and original-record appendix. Box headings stay with the next table where practical.
-- **PDF**: landscape tables, pagination, repeating headers, box totals, original-record appendix and grand total; space is reserved below box headings when practical. Large boxes may continue across pages.
+- **Excel (.xlsx)**: Box Inventory, Product Summary (overall sample totals) and Original Records worksheets. The Box Inventory table has Date, Samples, Quantity and Remarks, with box/inventory-date headings above it. Consolidated remarks include original quantities and the number of source entries. Quantities and totals are numeric cells in matching columns. The flat Original Records sheet retains box/session columns for reimport; bookkeeping fields after the first six columns are hidden by default to keep the backup readable, and remain available for complete restoration.
+- **Word (.docx)**: portrait pages, box/inventory-date headings with four-column tables, repeating table headers, subtotals, sample summary and original-record appendix. Box headings stay with the next table where practical.
+- **PDF**: portrait pages and four-column tables, pagination, repeating headers, box totals, original-record appendix and grand total; space is reserved below box headings when practical. Large boxes may continue across pages.
 
 Clear filters before exporting a complete backup. PNG, JPEG or AVIF logo uploads up to 2 MB are converted locally to PNG for consistent report embedding.
 

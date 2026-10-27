@@ -46,6 +46,7 @@ test("Excel is a valid workbook with box totals, product totals, logo and lossle
     ["Box Inventory", "Product Summary", "Original Records"],
   );
   assert.equal(wb.getWorksheet("Original Records").rowCount, 5);
+  assert.equal(wb.getWorksheet("Original Records").getColumn(7).hidden, true);
   let headerRow, firstData;
   wb.getWorksheet("Box Inventory").eachRow((row) => {
     if (!headerRow && row.getCell(1).value === "Date") {
@@ -53,17 +54,22 @@ test("Excel is a valid workbook with box totals, product totals, logo and lossle
       firstData = wb.getWorksheet("Box Inventory").getRow(headerRow + 1);
     }
   });
+  assert.deepEqual(
+    wb.getWorksheet("Box Inventory").getRow(headerRow).values.slice(1),
+    ["Date", "Samples", "Quantity", "Remarks"],
+  );
   assert.equal(firstData.getCell(1).value, "2025-03-26");
   assert.equal(firstData.getCell(2).value, "LB-2210");
   assert.equal(firstData.getCell(3).value, 8);
-  assert.equal(firstData.getCell(4).value, 2);
-  assert.equal(firstData.getCell(5).value, "Bundle | Broken");
-  assert.equal(firstData.getCell(6).value, "2026-10-24");
+  assert.equal(firstData.cellCount, 4);
+  assert.ok(firstData.getCell(4).value.includes("5 units — Bundle"));
+  assert.ok(firstData.getCell(4).value.includes("3 units — Broken"));
+  assert.ok(firstData.getCell(4).value.includes("2 original entries"));
   const values = [];
   wb.getWorksheet("Box Inventory").eachRow((r) => values.push(r.values));
   assert.equal(values.find((v) => v[1] === "GRAND TOTAL")[3], 14);
   assert.equal(
-    wb.getWorksheet("Product Summary").getRow(2).getCell(3).value,
+    wb.getWorksheet("Product Summary").getRow(2).getCell(2).value,
     14,
   );
   assert.equal(wb.getWorksheet("Box Inventory").getImages().length, 1);
@@ -80,6 +86,9 @@ test("Word report is real OOXML with headings, source remarks and separate times
   const blob = await wordReport(model),
     zip = await JSZip.loadAsync(await blob.arrayBuffer()),
     xml = await zip.file("word/document.xml").async("string");
+  const firstHeader = xml.match(/<w:tr>[\s\S]*?<\/w:tr>/)?.[0];
+  assert.equal((firstHeader.match(/<w:tc>/g) || []).length, 4);
+  assert.ok(!xml.includes("Tracking / provenance"));
   for (const text of [
     "BOX NO. 001",
     "BOX NO. 002",
@@ -151,14 +160,17 @@ test("raw sheet Excel imports with separate sheet metadata; reports keep differe
       rows.push(row.values.slice(1));
   });
   assert.deepEqual(
-    rows.map((r) => [r[0], r[1], r[2], r[3], r[5]]),
+    rows.map((r) => r.slice(0, 3)),
     [
-      ["2025-05-01", "Mixed-case sample", 5, 2, "2026-10-24"],
-      ["2025-05-01", "Mixed-case sample", 6, 1, "2026-10-25"],
-      ["2025-05-02", "Mixed-case sample", 4, 1, "2026-10-24"],
+      ["2025-05-01", "Mixed-case sample", 5],
+      ["2025-05-01", "Mixed-case sample", 6],
+      ["2025-05-02", "Mixed-case sample", 4],
     ],
   );
-  assert.equal(rows[0][4], "50/50 hot process | #2; 48°C");
+  assert.ok(rows[0][3].includes("Inventory: 2026-10-24"));
+  assert.ok(rows[1][3].includes("Inventory: 2026-10-25"));
+  assert.ok(rows[0][3].includes("2 units — 50/50 hot process"));
+  assert.ok(rows[0][3].includes("3 units — #2; 48°C"));
   const zip = await JSZip.loadAsync(await (await wordReport(m)).arrayBuffer());
   const xml = await zip.file("word/document.xml").async("string");
   for (const v of [
@@ -224,18 +236,14 @@ test("tracking metadata and remark quantities survive every report and Excel ori
   wb.getWorksheet("Box Inventory").eachRow((row) => {
     if (row.getCell(2).value === "LB-2210") values = row.values.slice(1);
   });
-  assert.equal(values[6], "LB-2210 · 2025-03-26");
-  assert.equal(values[7], "gel");
-  assert.equal(
-    values[8],
-    "2 units (1 entries): Found apart\n3 units (1 entries): Broken packet",
-  );
+  assert.equal(values.length, 4);
+  assert.ok(values[3].includes("Type: gel"));
+  assert.ok(values[3].includes("2 units — Found apart"));
+  assert.ok(values[3].includes("3 units — Broken packet"));
   const zip = await JSZip.loadAsync(await (await wordReport(m)).arrayBuffer()),
     xml = await zip.file("word/document.xml").async("string");
   for (const text of [
-    "Batch-X",
     "gel",
-    "Box 1 import",
     "Found apart",
     "Broken packet",
     "2 units",
@@ -243,12 +251,6 @@ test("tracking metadata and remark quantities survive every report and Excel ori
   ])
     assert.ok(xml.includes(text), text);
   const pdf = Buffer.from(await pdfReport(m).arrayBuffer()).toString("latin1");
-  for (const text of [
-    "Batch-X",
-    "gel",
-    "Box 1 import",
-    "Found apart",
-    "Broken packet",
-  ])
+  for (const text of ["gel", "Found apart", "Broken packet"])
     assert.ok(pdf.includes(text), text);
 });

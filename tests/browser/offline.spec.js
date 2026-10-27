@@ -29,6 +29,7 @@ test("standalone HTML needs no external resources and supports persistence and a
   await page.reload();
   await expect(page.getByText("Your inventory starts here")).toBeVisible();
   await page.locator("#add").click();
+  await page.locator(".advanced-record > summary").click();
   for (const [name, value] of Object.entries({
     date: "2026-10-24",
     sampleDate: "2025-07-28",

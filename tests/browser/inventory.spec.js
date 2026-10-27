@@ -7,13 +7,13 @@ test("data entry, persistence, filters, editing, imports, branded downloads and 
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
-  await page.locator("#entry-type").fill("paste");
   await expect(page.getByText("Your inventory starts here")).toBeVisible();
   async function add(qty, box = "001", remarks = "") {
     await page.locator("#add").click();
     await page.locator("[name=date]").fill("2026-10-24");
     await page.locator("[name=sampleDate]").fill("2025-03-26");
     await page.locator("[name=code]").fill("LB-2210");
+    await page.locator(".advanced-record > summary").click();
     await page.locator("[name=description]").fill("Toothpaste sample");
     await page.locator("[name=quantity]").fill(String(qty));
     await page.locator("[name=box]").fill(box);
@@ -37,7 +37,7 @@ test("data entry, persistence, filters, editing, imports, branded downloads and 
   await expect(page.locator("#boxes .grand-total strong")).toHaveText(
     "14 units",
   );
-  await page.locator("#boxes .box").first().locator("summary").click();
+  await page.locator("#boxes .box").first().locator("summary").first().click();
   await expect(
     page.locator("#boxes").getByText("Broken", { exact: true }),
   ).toBeVisible();
@@ -100,7 +100,7 @@ test("data entry, persistence, filters, editing, imports, branded downloads and 
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(exports.xlsx);
   expect(wb.getWorksheet("Original Records").rowCount).toBe(6);
-  expect(wb.getWorksheet("Product Summary").getRow(4).getCell(3).value).toBe(
+  expect(wb.getWorksheet("Product Summary").getRow(4).getCell(2).value).toBe(
     17,
   );
   await page.locator("[data-close=report-dialog]").click();
@@ -118,7 +118,7 @@ test("data entry, persistence, filters, editing, imports, branded downloads and 
   await expect(page.locator("#boxes .grand-total strong")).toHaveText(
     "17 units",
   );
-  await page.locator("#boxes .box").first().locator("summary").click();
+  await page.locator("#boxes .box").first().locator("summary").first().click();
   page.once("dialog", (d) => d.accept());
   await page
     .locator("#boxes .box")
