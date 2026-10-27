@@ -7,9 +7,7 @@ test("data entry, persistence, filters, editing, imports, branded downloads and 
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
-  await page.locator("#entry-bundle").fill("Group-A");
   await page.locator("#entry-type").fill("paste");
-  await page.locator("#entry-status").selectOption("bundled");
   await expect(page.getByText("Your inventory starts here")).toBeVisible();
   async function add(qty, box = "001", remarks = "") {
     await page.locator("#add").click();
@@ -77,6 +75,7 @@ test("data entry, persistence, filters, editing, imports, branded downloads and 
     "1 possible duplicates",
   );
   await expect(page.locator("#boxes .box")).toHaveCount(3);
+  await page.locator("#skip-duplicates").check();
   await page.locator("#confirm-import").click();
   await expect(page.locator("#boxes .grand-total strong")).toHaveText(
     "17 units",
@@ -114,6 +113,7 @@ test("data entry, persistence, filters, editing, imports, branded downloads and 
   await expect(page.locator("#import-summary")).toContainText(
     "5 possible duplicates",
   );
+  await page.locator("#skip-duplicates").check();
   await page.locator("#confirm-import").click();
   await expect(page.locator("#boxes .grand-total strong")).toHaveText(
     "17 units",

@@ -25,26 +25,28 @@ const row = (patch = {}) =>
     batchName: "Original sheet",
     ...patch,
   });
-test("bundle, type, status, code, dates and box form strict consolidation boundaries; remarks retain quantities", () => {
-  const a = row(),
-    b = row({ quantity: 3, remarks: "Broken seal" }),
-    c = row({ remarks: "Loose item", bundleStatus: "loose" }),
-    d = row({ bundle: "Bundle-B" }),
-    e = row({ type: "paste" }),
-    f = row({ bundle: "" }),
-    g = row({ bundle: "" }),
-    h = row({ type: "" }),
-    i = row({ type: "" });
-  const s = summarize([a, b, c, d, e, f, g, h, i]);
-  assert.equal(s.consolidatedCount, 8);
-  assert.equal(s.quantity, 19);
-  const combined = s.boxes[0].rows.find((r) => r.sources.length === 2);
-  assert.equal(combined.quantity, 5);
-  assert.deepEqual(combined.remarkBreakdown, [
+test("same code/date automatically becomes one bundle without a manual ID; type still separates detailed rows", () => {
+  const records = [
+    row({ bundle: "" }),
+    row({ bundle: "Old label", remarks: "Broken packet", quantity: 3 }),
+    row({ bundleStatus: "loose", remarks: "Found apart" }),
+    row({ type: "paste" }),
+    row({ type: "" }),
+    row({ type: "" }),
+  ];
+  const s = summarize(records);
+  assert.equal(s.consolidatedCount, 3);
+  assert.equal(s.quantity, 13);
+  const merged = s.boxes[0].rows.find((r) => r.type === "gel");
+  assert.equal(merged.quantity, 7);
+  assert.equal(merged.bundle, "SAMPLE-A · 2025-06-01");
+  assert.equal(merged.sources.length, 3);
+  assert.deepEqual(merged.remarkBreakdown, [
     { remarks: "Good", quantity: 2, count: 1 },
-    { remarks: "Broken seal", quantity: 3, count: 1 },
+    { remarks: "Broken packet", quantity: 3, count: 1 },
+    { remarks: "Found apart", quantity: 2, count: 1 },
   ]);
-  assert.equal(combined.sources[1].id, b.id);
+  assert.equal(merged.sources[1].originalBundle, "Old label");
 });
 test("every repeated remark and empty remark remains accounted for", () => {
   const s = summarize([
@@ -60,10 +62,10 @@ test("every repeated remark and empty remark remains accounted for", () => {
   ]);
   assert.equal(r.sources.length, 3);
 });
-test("unknown legacy bundle/type never silently consolidates and duplicate fingerprints include tracking", () => {
+test("automatic grouping includes missing manual IDs and preserves duplicate source-reference distinctions", () => {
   const a = row({ bundle: "", type: "" }),
     b = row({ bundle: "", type: "" });
-  assert.equal(summarize([a, b]).consolidatedCount, 2);
+  assert.equal(summarize([a, b]).consolidatedCount, 1);
   assert.deepEqual(
     duplicateFlags(
       [row()],
@@ -74,37 +76,26 @@ test("unknown legacy bundle/type never silently consolidates and duplicate finge
         row({ bundleStatus: "loose" }),
       ],
     ),
-    [true, false, false, false],
+    [true, false, false, true],
   );
 });
-test("tracking columns import exactly and invalid status is rejected", () => {
-  const rows = [
+test("tracking imports preserve IDs/types; historical status notes are retained without classifying new records", () => {
+  const [r] = importRows(
     [
-      "Date",
-      "Samples",
-      "Quantity",
-      "Bundle ID",
-      "Sample Type",
-      "Bundle Status",
-      "Remarks",
+      ["Date", "Samples", "Quantity", "Bundle ID", "Sample Type", "Remarks"],
+      ["2025-06-01", "A", 3, "Known group", "gel", "Separated"],
     ],
-    ["2025-06-01", "A", 3, "Known bundle", "gel", "loose", "Separated"],
-  ];
-  const [r] = importRows(rows, { inventoryDate: "2026-10-24" });
-  assert.equal(r.bundle, "Known bundle");
-  assert.equal(r.type, "gel");
-  assert.equal(r.bundleStatus, "loose");
-  assert.throws(
-    () =>
-      importRows(
-        [
-          ...rows.slice(0, 1),
-          ["2025-06-01", "A", 3, "A", "gel", "invalid", ""],
-        ],
-        { inventoryDate: "2026-10-24" },
-      ),
-    /Bundle Status/,
+    { inventoryDate: "2026-10-24" },
   );
+  assert.equal(r.bundle, "A · 2025-06-01");
+  assert.equal(r.originalBundle, "Known group");
+  assert.equal(r.type, "gel");
+  assert.equal(r.bundleStatus, "");
+  const a = row({ bundleStatus: "old label", remarks: "Apart" }),
+    b = row({ bundleStatus: "other label", remarks: "In packet" });
+  const s = summarize([a, b]);
+  assert.equal(s.consolidatedCount, 1);
+  assert.equal(s.boxes[0].rows[0].sources[0].bundleStatus, "old label");
 });
 test("scope edits preserve originals and unrelated batches, replacements are atomic and reject empty input", () => {
   const a = row(),
@@ -137,7 +128,7 @@ test("scope edits preserve originals and unrelated batches, replacements are ato
   );
 });
 
-test("loose samples only combine when their shared bundle origin and type are explicitly known", () => {
+test("remark wording and missing old bundle labels never stop automatic code/date grouping", () => {
   const known = [
     row({ bundleStatus: "loose", quantity: 2, remarks: "Separated" }),
     row({ bundleStatus: "loose", quantity: 3, remarks: "Found loose" }),
@@ -148,6 +139,6 @@ test("loose samples only combine when their shared bundle origin and type are ex
   assert.equal(r.remarkBreakdown[1].quantity, 3);
   assert.equal(
     summarize(known.map((r) => ({ ...r, bundle: "" }))).consolidatedCount,
-    2,
+    1,
   );
 });

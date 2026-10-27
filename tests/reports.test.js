@@ -186,6 +186,7 @@ test("tracking metadata and remark quantities survive every report and Excel ori
     normalize({
       ...records[0],
       bundle: "Batch-X",
+      originalBundle: "Batch-X",
       type: "gel",
       bundleStatus: "loose",
       remarks: "Found apart",
@@ -197,6 +198,7 @@ test("tracking metadata and remark quantities survive every report and Excel ori
       ...records[0],
       id: "second",
       bundle: "Batch-X",
+      originalBundle: "Batch-X",
       type: "gel",
       bundleStatus: "loose",
       remarks: "Broken packet",
@@ -209,7 +211,8 @@ test("tracking metadata and remark quantities survive every report and Excel ori
   const blob = await excelReport(m);
   const file = new File([await blob.arrayBuffer()], "tracking.xlsx");
   const imported = await readInventoryFile(file);
-  assert.equal(imported[0].bundle, "Batch-X");
+  assert.equal(imported[0].bundle, "LB-2210 · 2025-03-26");
+  assert.equal(imported[0].originalBundle, "Batch-X");
   assert.equal(imported[0].type, "gel");
   assert.equal(imported[0].bundleStatus, "loose");
   assert.equal(imported[0].batchId, "import-123");
@@ -221,11 +224,10 @@ test("tracking metadata and remark quantities survive every report and Excel ori
   wb.getWorksheet("Box Inventory").eachRow((row) => {
     if (row.getCell(2).value === "LB-2210") values = row.values.slice(1);
   });
-  assert.equal(values[6], "Batch-X");
+  assert.equal(values[6], "LB-2210 · 2025-03-26");
   assert.equal(values[7], "gel");
-  assert.equal(values[8], "Loose / separated from bundle");
   assert.equal(
-    values[9],
+    values[8],
     "2 units (1 entries): Found apart\n3 units (1 entries): Broken packet",
   );
   const zip = await JSZip.loadAsync(await (await wordReport(m)).arrayBuffer()),
@@ -233,7 +235,6 @@ test("tracking metadata and remark quantities survive every report and Excel ori
   for (const text of [
     "Batch-X",
     "gel",
-    "Loose / separated from bundle",
     "Box 1 import",
     "Found apart",
     "Broken packet",
@@ -245,7 +246,6 @@ test("tracking metadata and remark quantities survive every report and Excel ori
   for (const text of [
     "Batch-X",
     "gel",
-    "Loose / separated from bundle",
     "Box 1 import",
     "Found apart",
     "Broken packet",

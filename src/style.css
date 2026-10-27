@@ -862,3 +862,9 @@ dialog.large {
 [hidden] {
   display: none !important;
 }
+.legacy-ref {
+  display: block;
+  color: #82958c;
+  font-size: 10px;
+  margin-top: 4px;
+}

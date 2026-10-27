@@ -3,12 +3,12 @@ import "./style.css";
 import {
   normalize,
   boxKey,
+  autoBundle,
   summarize,
   duplicateFlags,
   collator,
   compareSamples,
   sortOriginals,
-  statusLabel,
   importBatches,
   replaceScope,
   updateScope,
@@ -58,11 +58,11 @@ try {
     "Saved data could not be loaded. To protect it, saving is disabled. Export your browser storage or restore a valid backup before continuing.";
 }
 const app = document.querySelector("#app");
-app.innerHTML = `<aside class="sidebar"><a class="brand" href="#"><img class="brand-logo" src="${defaultLogo}" alt="Shemberg"><span><small>INVENTORY WORKSPACE</small></span></a><div class="nav-label">WORKSPACE</div><a class="nav active" href="#inventory">▦ <span>Inventory overview</span></a><a class="nav" href="#products">◈ <span>Sample summary</span></a><a class="nav" href="#tools">⇅ <span>Import & reports</span></a><div class="sidebar-bottom"><span class="status-dot"></span> Stored on this browser<small>Export regularly to keep a backup.</small></div></aside><main><header><div class="breadcrumb">Workspace <span>/</span> Toothpaste inventory</div><div class="session"><span class="status-dot"></span><span id="session-label"></span><button id="new-session" class="text-button">New session</button></div></header><section class="page-title" id="inventory"><div><div class="eyebrow">WAREHOUSE OPERATIONS</div><h1>Toothpaste inventory</h1><p>A clear view of every product, one box at a time.</p></div><button class="primary" id="add">＋ Add inventory</button></section><button id="undo" hidden>Undo last inventory change</button><div id="notice" role="status" aria-live="polite"></div><section class="panel sheet-settings"><div><h2>Inventory sheet header</h2><p>Set the box and stock-count date before entering or importing a sheet.</p></div><label>Date of Inventory (session)<input id="inventory-session-date" type="date" required></label><label>Box Number<input id="entry-box" maxlength="100" placeholder="e.g. 1 (Brown) — blank is unassigned"></label><label>Bundle ID / group (optional)<input id="entry-bundle" maxlength="100" placeholder="Only assign a known bundle/group"></label><label>Sample type (optional)<input id="entry-type" maxlength="100" placeholder="e.g. gel, paste"></label><label>Bundle status<select id="entry-status"><option value="unknown">Unknown</option><option value="bundled">In bundle</option><option value="loose">Loose / separated from bundle</option></select></label></section><section class="metrics" id="metrics"></section><p id="bundle-summary" class="hint"></p><section class="panel tools" id="tools"><div><h2>Inventory workspace</h2><p>Box first. Sample date next. Every original entry preserved.</p></div><div class="actions"><label class="button">↑ Import file<input id="import-file" type="file" accept=".csv,.xlsx" hidden></label><button id="batches-open">Manage imports / batches</button><button id="import-format" title="Import format and CSV template">Template</button><button id="preview-report">Report preview</button><button id="export-open" class="dark">↓ Export report</button></div></section><section class="panel filters"><label class="search"><span>⌕</span><input id="search" placeholder="Search products, boxes, or remarks…" aria-label="Search inventory"></label><label>Box<select id="box-filter"><option value="all">All boxes</option></select></label><label>Sample date from<input type="date" id="from"></label><label>Sample date to<input type="date" id="to"></label><label>Inventory session<select id="inventory-date-filter"><option value="all">All session dates</option></select></label><label>Bundle status<select id="status-filter"><option value="all">All bundle statuses</option><option value="bundled">In bundle</option><option value="loose">Loose / separated</option><option value="unknown">Unknown</option></select></label><label>View<select id="view"><option value="consolidated">Consolidated view</option><option value="original">Original records</option></select></label><label>Sort within box<select id="sort"><option value="date">Sample date, then sample</option><option value="code">Sample, then date</option><option value="quantity">Quantity, high to low</option></select></label><button id="reset">Reset</button></section><div class="list-meta"><span id="shown"></span><span>BOX-FIRST VIEW <span class="tag">Auto-consolidated</span></span></div><section id="boxes"></section><section class="panel products" id="products"><div class="section-heading"><div><h2>Overall sample summary</h2><p>Totals across the current filtered inventory.</p></div></div><div id="product-table"></div></section><section class="panel branding"><div><h2>Your Shemberg branding</h2><p>Upload the official logo for the application and all reports. PNG, JPEG, or AVIF, up to 2 MB.</p></div><div class="actions"><img id="logo-preview" alt="Uploaded Shemberg logo" hidden><label class="button">Upload logo<input id="logo-file" type="file" accept="image/png,image/jpeg,image/avif" hidden></label><button id="remove-logo">Reset logo</button></div></section><footer><span>SHEMBERG · INVENTORY MANAGEMENT · v1.1</span><span>Local storage · No account required</span></footer></main>
-<dialog id="record-dialog"><form id="record-form"><div class="dialog-heading"><div><div class="eyebrow">INVENTORY RECORD</div><h2 id="form-title">Add inventory</h2></div><button type="button" data-close="record-dialog" aria-label="Close">✕</button></div><div class="form-grid"><label>Box Number<input name="box" maxlength="100" placeholder="e.g. 1 (Brown) — blank if unassigned"></label><label>Date of Inventory (session)<input name="date" type="date" required></label><label>Date (sample date)<input name="sampleDate" type="date" required></label><label>Samples (name or code)<input name="code" maxlength="100" required placeholder="Enter the sample name or code as written"></label><label>Quantity (units)<input name="quantity" type="number" min="0" max="9007199254740991" step="1" required></label><label>Bundle ID / group<input name="bundle" maxlength="100" placeholder="Blank if its bundle is unknown"></label><label>Sample type<input name="type" maxlength="100" placeholder="e.g. gel, paste"></label><label>Bundle status<select name="bundleStatus"><option value="unknown">Unknown</option><option value="bundled">In bundle</option><option value="loose">Loose / separated from bundle</option></select></label><label class="wide">Description (optional)<input name="description" maxlength="500" placeholder="Additional description, if needed"></label><label class="wide">Remarks<textarea name="remarks" maxlength="2000" rows="3" placeholder="Condition, bundles, or counting notes"></textarea></label></div><p class="hint">Date of Inventory is the sheet-level stock-count date. Date is the original sample date. Only matching known bundle IDs and sample types consolidate. Loose and in-bundle stock stay separate, and remarks keep their individual quantities. The entry timestamp is recorded separately; editing keeps the original timestamp.</p><div class="dialog-actions"><button type="button" data-close="record-dialog">Cancel</button><button class="primary" type="submit">Save record</button></div></form></dialog>
-<dialog id="import-dialog" class="large"><div class="dialog-heading"><div><div class="eyebrow">REVIEW BEFORE SAVING</div><h2>Import preview</h2></div><button data-close="import-dialog" aria-label="Close">✕</button></div><p id="import-summary"></p><label class="batch-name-label">Import / batch name<input id="import-name" maxlength="200" required></label><p class="hint">Possible duplicates match the inventory session date, sample date, sample name/code, bundle, type, status, quantity, box, description, and remarks. Review before confirming. Check the session date and box in this preview. Blank box cells stay unassigned; missing Box Number columns use the sheet header.</p><label class="check"><input id="skip-duplicates" type="checkbox" checked> Skip possible duplicates</label><div id="import-preview" class="scroll"></div><div class="dialog-actions"><button data-close="import-dialog">Cancel</button><button id="confirm-import" class="primary">Confirm import</button></div></dialog>
+app.innerHTML = `<aside class="sidebar"><a class="brand" href="#"><img class="brand-logo" src="${defaultLogo}" alt="Shemberg"><span><small>INVENTORY WORKSPACE</small></span></a><div class="nav-label">WORKSPACE</div><a class="nav active" href="#inventory">▦ <span>Inventory overview</span></a><a class="nav" href="#products">◈ <span>Sample summary</span></a><a class="nav" href="#tools">⇅ <span>Import & reports</span></a><div class="sidebar-bottom"><span class="status-dot"></span> Stored on this browser<small>Export regularly to keep a backup.</small></div></aside><main><header><div class="breadcrumb">Workspace <span>/</span> Toothpaste inventory</div><div class="session"><span class="status-dot"></span><span id="session-label"></span><button id="new-session" class="text-button">New session</button></div></header><section class="page-title" id="inventory"><div><div class="eyebrow">WAREHOUSE OPERATIONS</div><h1>Toothpaste inventory</h1><p>A clear view of every product, one box at a time.</p></div><button class="primary" id="add">＋ Add inventory</button></section><button id="undo" hidden>Undo last inventory change</button><div id="notice" role="status" aria-live="polite"></div><section class="panel sheet-settings"><div><h2>Inventory sheet header</h2><p>Set the box and stock-count date before entering or importing a sheet.</p></div><label>Date of Inventory (session)<input id="inventory-session-date" type="date" required></label><label>Box Number<input id="entry-box" maxlength="100" placeholder="e.g. 1 (Brown) — blank is unassigned"></label><label>Sample type (optional)<input id="entry-type" maxlength="100" placeholder="e.g. gel, paste"></label></section><section class="metrics" id="metrics"></section><p id="bundle-summary" class="hint"></p><section class="panel tools" id="tools"><div><h2>Inventory workspace</h2><p>Box first. Sample date next. Every original entry preserved.</p></div><div class="actions"><label class="button">↑ Import file<input id="import-file" type="file" accept=".csv,.xlsx" hidden></label><button id="batches-open">Manage imports / batches</button><button id="import-format" title="Import format and CSV template">Template</button><button id="preview-report">Report preview</button><button id="export-open" class="dark">↓ Export report</button></div></section><section class="panel filters"><label class="search"><span>⌕</span><input id="search" placeholder="Search products, boxes, or remarks…" aria-label="Search inventory"></label><label>Box<select id="box-filter"><option value="all">All boxes</option></select></label><label>Sample date from<input type="date" id="from"></label><label>Sample date to<input type="date" id="to"></label><label>Inventory session<select id="inventory-date-filter"><option value="all">All session dates</option></select></label><label>View<select id="view"><option value="consolidated">Consolidated view</option><option value="original">Original records</option></select></label><label>Sort within box<select id="sort"><option value="date">Sample date, then sample</option><option value="code">Sample, then date</option><option value="quantity">Quantity, high to low</option></select></label><button id="reset">Reset</button></section><div class="list-meta"><span id="shown"></span><span>BOX-FIRST VIEW <span class="tag">Auto-consolidated</span></span></div><section id="boxes"></section><section class="panel products" id="products"><div class="section-heading"><div><h2>Overall sample summary</h2><p>Totals across the current filtered inventory.</p></div></div><div id="product-table"></div></section><section class="panel branding"><div><h2>Your Shemberg branding</h2><p>Upload the official logo for the application and all reports. PNG, JPEG, or AVIF, up to 2 MB.</p></div><div class="actions"><img id="logo-preview" alt="Uploaded Shemberg logo" hidden><label class="button">Upload logo<input id="logo-file" type="file" accept="image/png,image/jpeg,image/avif" hidden></label><button id="remove-logo">Reset logo</button></div></section><footer><span>SHEMBERG · INVENTORY MANAGEMENT · v1.3</span><span>Local storage · No account required</span></footer></main>
+<dialog id="record-dialog"><form id="record-form"><div class="dialog-heading"><div><div class="eyebrow">INVENTORY RECORD</div><h2 id="form-title">Add inventory</h2></div><button type="button" data-close="record-dialog" aria-label="Close">✕</button></div><div class="form-grid"><label>Box Number<input name="box" maxlength="100" placeholder="e.g. 1 (Brown) — blank if unassigned"></label><label>Date of Inventory (session)<input name="date" type="date" required></label><label>Date (sample date)<input name="sampleDate" type="date" required></label><label>Samples (name or code)<input name="code" maxlength="100" required placeholder="Enter the sample name or code as written"></label><label>Quantity (units)<input name="quantity" type="number" min="0" max="9007199254740991" step="1" required></label><label>Bundle ID (automatic)<input name="bundle" readonly aria-readonly="true" placeholder="Generated from sample code and sample date"></label><label>Sample type<input name="type" maxlength="100" placeholder="e.g. gel, paste"></label><label class="wide">Description (optional)<input name="description" maxlength="500" placeholder="Additional description, if needed"></label><label class="wide">Remarks<textarea name="remarks" maxlength="2000" rows="3" placeholder="Condition, bundles, or counting notes"></textarea></label></div><p class="hint">Date of Inventory is the sheet-level stock-count date. Date is the original sample date. Matching sample codes and sample dates automatically share one bundle within this box and inventory session; sample types remain separate when entered. Remarks keep their individual quantities. The entry timestamp is recorded separately; editing keeps the original timestamp.</p><div class="dialog-actions"><button type="button" data-close="record-dialog">Cancel</button><button class="primary" type="submit">Save record</button></div></form></dialog>
+<dialog id="import-dialog" class="large"><div class="dialog-heading"><div><div class="eyebrow">REVIEW BEFORE SAVING</div><h2>Import preview</h2></div><button data-close="import-dialog" aria-label="Close">✕</button></div><p id="import-summary"></p><label class="batch-name-label">Import / batch name<input id="import-name" maxlength="200" required></label><p class="hint">Possible duplicates match the inventory session date, sample date, sample name/code, type, quantity, box, description, and remarks. Review before confirming. Check the session date and box in this preview. Blank box cells stay unassigned; missing Box Number columns use the sheet header.</p><label class="check"><input id="skip-duplicates" type="checkbox"> Skip confirmed duplicates (otherwise keep every source entry)</label><div id="import-preview" class="scroll"></div><div class="dialog-actions"><button data-close="import-dialog">Cancel</button><button id="confirm-import" class="primary">Confirm import</button></div></dialog>
 <dialog id="report-dialog" class="large"><div class="dialog-heading"><div><div class="eyebrow">REPORT CENTER</div><h2>Inventory report preview</h2></div><button data-close="report-dialog" aria-label="Close">✕</button></div><p class="hint">Reports use your current search and filters, always sorted by box, sample date, and sample name/code. Different inventory session dates remain separate. Original entries and overall product totals are included.</p><div class="actions report-actions"><button data-export="xlsx">↓ Excel (.xlsx)</button><button data-export="docx">↓ Word (.docx)</button><button data-export="pdf" class="primary">↓ PDF</button></div><div id="report-content"></div></dialog>
-<dialog id="help-dialog"><h2>Import inventory</h2><p>Choose a CSV or Excel (.xlsx) file with these headers:</p><p class="hint">Date, Samples, Quantity, Remarks. Optionally include Box Number and Date of Inventory; otherwise the sheet header supplies them. Optional tracking columns: Bundle ID, Sample Type, Bundle Status (bundled, loose, unknown). Unknown bundle or type records stay separate; use bulk edit to assign a confirmed group. Description is optional.</p><p>Date means the sample date. Date of Inventory is the separate session date. Use YYYY-MM-DD dates or Excel date cells. Blank box cells remain unassigned. Excel reports from this application import the Original Records worksheet to avoid double counting.</p><div class="dialog-actions"><button id="template">Download CSV template</button><button data-close="help-dialog">Close</button></div></dialog>
+<dialog id="help-dialog"><h2>Import inventory</h2><p>Choose a CSV or Excel (.xlsx) file with these headers:</p><p class="hint">Date, Samples, Quantity, Remarks. Optionally include Box Number and Date of Inventory; otherwise the sheet header supplies them. Optional tracking column: Sample Type. Bundle IDs are generated automatically from Samples and Date; existing bundle references in files are retained as original references. Description is optional.</p><p>Date means the sample date. Date of Inventory is the separate session date. Use YYYY-MM-DD dates or Excel date cells. Blank box cells remain unassigned. Excel reports from this application import the Original Records worksheet to avoid double counting.</p><div class="dialog-actions"><button id="template">Download CSV template</button><button data-close="help-dialog">Close</button></div></dialog>
 <dialog id="batches-dialog" class="large"><div class="dialog-heading"><div><h2>Imports and batches</h2><p>Manage entire saved imports, independent of the current search and filters.</p></div><button data-close="batches-dialog">✕</button></div><div id="batch-list"></div></dialog>
 <dialog id="manage-dialog" class="large"><div class="dialog-heading"><h2 id="manage-title">Manage records</h2><button data-close="manage-dialog">✕</button></div><p id="manage-summary"></p><p class="hint">Check only the fields you want to change. Source quantities, sample dates and remarks remain unchanged. This operation includes all listed records, even if hidden by search or date-range filters.</p><form id="bulk-form"><div class="form-grid" id="bulk-fields"></div><div class="dialog-actions"><button type="submit" class="primary">Apply checked changes</button><label class="button">Reimport to replace<input id="replace-file" type="file" accept=".csv,.xlsx" hidden></label><button id="delete-scope" class="danger" type="button">Delete these records</button></div></form><details><summary>Review affected original records</summary><div id="scope-records"></div></details></dialog>`;
 const $ = (s) => document.querySelector(s);
@@ -87,8 +87,6 @@ function filtered() {
   return records.filter(
     (r) =>
       (b === "all" || boxKey(r.box) === b) &&
-      ($("#status-filter").value === "all" ||
-        (r.bundleStatus || "unknown") === $("#status-filter").value) &&
       ($("#inventory-date-filter").value === "all" ||
         r.date === $("#inventory-date-filter").value) &&
       (from === "" || r.sampleDate >= from) &&
@@ -118,14 +116,13 @@ function sourceTable(sources, editable = true) {
       "Remarks",
       "Bundle ID",
       "Sample type",
-      "Bundle status",
       "Import / batch",
       "Entry timestamp",
       ...(editable ? ["Actions"] : []),
     ],
     sources.map(
       (r) =>
-        `<tr><td>${e(r.date)}</td><td>${e(r.sampleDate) || "—"}</td><td>${e(r.box) || "UNASSIGNED BOX"}</td><td>${e(r.code)}</td><td>${e(r.description)}</td><td>${r.quantity}</td><td class="remarks">${e(r.remarks) || "—"}</td><td>${e(r.bundle) || "Unidentified"}</td><td>${e(r.type) || "Unspecified"}</td><td>${e(statusLabel(r.bundleStatus))}</td><td>${e(r.batchName) || "Existing / manual records"}</td><td>${e(r.sessionAt || "Not recorded")}</td>${editable ? `<td class="row-actions"><button data-edit="${e(r.id)}">Edit</button><button data-delete="${e(r.id)}" class="danger">Delete</button></td>` : ""}</tr>`,
+        `<tr><td>${e(r.date)}</td><td>${e(r.sampleDate) || "—"}</td><td>${e(r.box) || "UNASSIGNED BOX"}</td><td>${e(r.code)}</td><td>${e(r.description)}</td><td>${r.quantity}</td><td class="remarks">${e(r.remarks) || "—"}</td><td>${e(autoBundle(r))}${r.originalBundle ? `<small class="legacy-ref">Original reference: ${e(r.originalBundle)}</small>` : ""}</td><td>${e(r.type) || "Unspecified"}</td><td>${e(r.batchName) || "Existing / manual records"}</td><td>${e(r.sessionAt || "Not recorded")}</td>${editable ? `<td class="row-actions"><button data-edit="${e(r.id)}">Edit</button><button data-delete="${e(r.id)}" class="danger">Delete</button></td>` : ""}</tr>`,
     ),
   );
 }
@@ -149,27 +146,20 @@ function boxHTML(b, editable = true, sort = "date", original = false) {
           "Samples",
           "Quantity",
           "Date of Inventory",
-          "Bundle / type / status",
+          "Bundle / type",
           "Remarks / original entries",
         ],
         rows.map(
           (r) =>
-            `<tr><td>${e(r.sampleDate) || '<span class="danger">NOT RECORDED</span>'}</td><td><span class="code">${e(r.code)}</span></td><td class="quantity">${r.quantity.toLocaleString()}</td><td>${e(r.date)}</td><td class="tracking">${e(r.bundle) || "Unidentified bundle"}<br>${e(r.type) || "Unspecified type"}<br>${e(statusLabel(r.bundleStatus))}</td><td class="remarks"><details><summary>${r.sources.length} source ${r.sources.length === 1 ? "entry" : "entries"} <span>${e(r.remarks.join(" · ")) || "No remarks"}</span></summary>${remarkBreakdown(r)}${sourceTable(r.sources, editable)}</details></td></tr>`,
+            `<tr><td>${e(r.sampleDate) || '<span class="danger">NOT RECORDED</span>'}</td><td><span class="code">${e(r.code)}</span></td><td class="quantity">${r.quantity.toLocaleString()}</td><td>${e(r.date)}</td><td class="tracking">${e(r.bundle) || "Unidentified bundle"}<br>${e(r.type) || "Unspecified type"}</td><td class="remarks"><details><summary>${r.sources.length} source ${r.sources.length === 1 ? "entry" : "entries"} <span>${e(r.remarks.join(" · ")) || "No remarks"}</span></summary>${remarkBreakdown(r)}${sourceTable(r.sources, editable)}</details></td></tr>`,
         ),
       );
   return `<article class="panel box">${heading}${body}<div class="box-footer"><span>BOX TOTAL</span><strong>${b.total.toLocaleString()} units</strong></div></article>`;
 }
 function render() {
   $("#undo").hidden = !undoRecords;
-  const totals = records.reduce(
-    (n, r) => {
-      n[r.bundleStatus || "unknown"] += r.quantity;
-      return n;
-    },
-    { bundled: 0, loose: 0, unknown: 0 },
-  );
   $("#bundle-summary").textContent =
-    `All saved inventory: ${totals.bundled} units in bundles · ${totals.loose} loose / separated units · ${totals.unknown} status unknown. Unidentified bundle or type rows remain separate until explicitly assigned.`;
+    "Matching sample codes and dates automatically share one bundle within each box and inventory session. Sample Type separates different types. Every remark keeps its quantity breakdown.";
   const old = $("#box-filter").value;
   const oldSession = $("#inventory-date-filter").value;
   $("#inventory-date-filter").innerHTML =
@@ -253,9 +243,7 @@ function openForm(record) {
     "quantity",
     "box",
     "remarks",
-    "bundle",
     "type",
-    "bundleStatus",
   ])
     f.elements[key].value =
       record?.[key] ??
@@ -263,18 +251,26 @@ function openForm(record) {
         ? $("#inventory-session-date").value
         : key === "box"
           ? $("#entry-box").value
-          : key === "bundle"
-            ? $("#entry-bundle").value
-            : key === "type"
-              ? $("#entry-type").value
-              : key === "bundleStatus"
-                ? $("#entry-status").value
-                : "");
+          : key === "type"
+            ? $("#entry-type").value
+            : "");
+  f.elements.bundle.value = autoBundle({
+    code: f.elements.code.value,
+    sampleDate: f.elements.sampleDate.value,
+  });
   $("#form-title").textContent = record
     ? "Edit original record"
     : "Add inventory";
   $("#record-dialog").showModal();
 }
+for (const key of ["code", "sampleDate"])
+  $("#record-form").elements[key].addEventListener("input", () => {
+    const f = $("#record-form");
+    f.elements.bundle.value = autoBundle({
+      code: f.elements.code.value,
+      sampleDate: f.elements.sampleDate.value,
+    });
+  });
 $("#add").onclick = () => openForm();
 $("#new-session").onclick = () => {
   sessionAt = new Date().toISOString();
@@ -366,7 +362,6 @@ for (const id of [
   "sort",
   "inventory-date-filter",
   "view",
-  "status-filter",
 ])
   $("#" + id).addEventListener(id === "search" ? "input" : "change", render);
 $("#reset").onclick = () => {
@@ -374,7 +369,6 @@ $("#reset").onclick = () => {
   $("#box-filter").value = "all";
   $("#sort").value = "date";
   $("#inventory-date-filter").value = "all";
-  $("#status-filter").value = "all";
   render();
 };
 async function previewImport(event, scope = null) {
@@ -390,9 +384,7 @@ async function previewImport(event, scope = null) {
           ? dates[0]
           : $("#inventory-session-date").value,
       box: scope && boxes.length === 1 ? boxes[0] : $("#entry-box").value,
-      bundle: $("#entry-bundle").value,
       type: $("#entry-type").value,
-      bundleStatus: $("#entry-status").value,
     };
     preview = await readInventoryFile(file, defaults);
     if (!preview.length) throw Error("No inventory records found.");
@@ -414,7 +406,7 @@ async function previewImport(event, scope = null) {
       records.filter((r) => !scope?.ids.includes(r.id)),
       preview,
     );
-    $("#skip-duplicates").checked = !scope;
+    $("#skip-duplicates").checked = false;
     $("#import-name").value = scope?.label || file.name;
     $("#import-summary").textContent =
       `${preview.length} valid original records · ${flags.filter(Boolean).length} possible duplicates · ${scope ? `REPLACE ${target.length} existing records in ${scope.label}` : "ADD a new import batch"} · Nothing has been saved yet.`;
@@ -428,12 +420,11 @@ async function previewImport(event, scope = null) {
         "Box",
         "Bundle ID",
         "Sample type",
-        "Bundle status",
         "Remarks",
       ],
       preview.map(
         (r, i) =>
-          `<tr class="${flags[i] ? "duplicate" : ""}"><td>${flags[i] ? "Possible duplicate" : "New"}</td><td>${e(r.date)}</td><td>${e(r.sampleDate) || "—"}</td><td>${e(r.code)}</td><td>${r.quantity}</td><td>${e(r.box) || "UNASSIGNED"}</td><td>${e(r.bundle) || "Unidentified"}</td><td>${e(r.type) || "Unspecified"}</td><td>${e(statusLabel(r.bundleStatus))}</td><td class="remarks">${e(r.remarks)}</td></tr>`,
+          `<tr class="${flags[i] ? "duplicate" : ""}"><td>${flags[i] ? "Possible duplicate" : "New"}</td><td>${e(r.date)}</td><td>${e(r.sampleDate) || "—"}</td><td>${e(r.code)}</td><td>${r.quantity}</td><td>${e(r.box) || "UNASSIGNED"}</td><td>${e(autoBundle(r))}${r.originalBundle ? `<small class="legacy-ref">Original reference: ${e(r.originalBundle)}</small>` : ""}</td><td>${e(r.type) || "Unspecified"}</td><td class="remarks">${e(r.remarks)}</td></tr>`,
       ),
     );
     $("#confirm-import").textContent = scope
@@ -509,10 +500,9 @@ $("#confirm-import").onclick = () => {
 };
 $("#template").onclick = () =>
   saveBlob(
-    new Blob(
-      ["Date,Samples,Quantity,Remarks,Bundle ID,Sample Type,Bundle Status\r\n"],
-      { type: "text/csv" },
-    ),
+    new Blob(["Date,Samples,Quantity,Remarks,Sample Type\r\n"], {
+      type: "text/csv",
+    }),
     "shemberg-import-template.csv",
   );
 function openReport() {
@@ -600,17 +590,9 @@ try {
   if (saved.inventoryDate)
     $("#inventory-session-date").value = saved.inventoryDate;
   $("#entry-box").value = saved.box || "";
-  $("#entry-bundle").value = saved.bundle || "";
   $("#entry-type").value = saved.type || "";
-  $("#entry-status").value = saved.bundleStatus || "unknown";
 } catch {}
-for (const id of [
-  "inventory-session-date",
-  "entry-box",
-  "entry-bundle",
-  "entry-type",
-  "entry-status",
-])
+for (const id of ["inventory-session-date", "entry-box", "entry-type"])
   $("#" + id).onchange = () => {
     try {
       localStorage.setItem(
@@ -618,9 +600,7 @@ for (const id of [
         JSON.stringify({
           inventoryDate: $("#inventory-session-date").value,
           box: $("#entry-box").value,
-          bundle: $("#entry-bundle").value,
           type: $("#entry-type").value,
-          bundleStatus: $("#entry-status").value,
         }),
       );
     } catch (err) {
@@ -640,9 +620,7 @@ function openManagement(scope) {
   const fields = [
     ["box", "Box Number", "text"],
     ["date", "Date of Inventory", "date"],
-    ["bundle", "Bundle ID / group", "text"],
     ["type", "Sample type", "text"],
-    ["bundleStatus", "Bundle status", "status"],
     ...(scope.kind === "batch"
       ? [["batchName", "Import / batch name", "text"]]
       : []),
@@ -651,7 +629,7 @@ function openManagement(scope) {
     .map(([key, label, kind]) => {
       const values = [...new Set(list.map((r) => r[key] || ""))],
         value = values.length === 1 ? values[0] : "";
-      return `<div class="bulk-field"><label class="check"><input type="checkbox" name="change-${key}">Change ${label}</label>${kind === "status" ? `<select name="${key}">${["unknown", "bundled", "loose"].map((s) => `<option value="${s}" ${s === value ? "selected" : ""}>${e(statusLabel(s))}</option>`).join("")}</select>` : `<input name="${key}" type="${kind}" value="${e(value)}" maxlength="${key === "batchName" ? 200 : 100}" placeholder="${values.length > 1 ? "Mixed values — check to overwrite" : ""}">`}</div>`;
+      return `<div class="bulk-field"><label class="check"><input type="checkbox" name="change-${key}">Change ${label}</label><input name="${key}" type="${kind}" value="${e(value)}" maxlength="${key === "batchName" ? 200 : 100}" placeholder="${values.length > 1 ? "Mixed values — check to overwrite" : ""}"></div>`;
     })
     .join("");
   $("#scope-records").innerHTML = sourceTable(sortOriginals(list), false);
@@ -675,14 +653,7 @@ $("#bulk-form").onsubmit = (event) => {
   try {
     const form = event.target,
       changes = {};
-    for (const key of [
-      "box",
-      "date",
-      "bundle",
-      "type",
-      "bundleStatus",
-      "batchName",
-    ])
+    for (const key of ["box", "date", "bundle", "type", "batchName"])
       if (form.elements[`change-${key}`]?.checked)
         changes[key] = form.elements[key].value;
     if (!Object.keys(changes).length)

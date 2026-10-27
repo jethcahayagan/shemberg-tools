@@ -12,13 +12,7 @@ import {
 } from "docx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import {
-  summarize,
-  parseCSV,
-  importRows,
-  sortOriginals,
-  statusLabel,
-} from "./core.js";
+import { summarize, parseCSV, importRows, sortOriginals } from "./core.js";
 export const columns = [
   "Date",
   "Samples",
@@ -28,7 +22,6 @@ export const columns = [
   "Date of Inventory",
   "Bundle ID",
   "Sample Type",
-  "Bundle Status",
   "Remarks quantity breakdown",
 ];
 export function reportModel(records, logo, now = new Date()) {
@@ -52,7 +45,6 @@ export const rowValues = (r) => [
   r.date,
   r.bundle || "Unidentified",
   r.type || "Unspecified",
-  statusLabel(r.bundleStatus),
   r.remarkBreakdown
     .map(
       (d) =>
@@ -72,7 +64,8 @@ const originalHeaders = [
   "Record ID",
   "Bundle ID",
   "Sample Type",
-  "Bundle Status",
+  "Legacy Bundle Status",
+  "Original Bundle ID",
   "Batch ID",
   "Import Batch",
 ];
@@ -88,7 +81,8 @@ const originalValues = (r) => [
   r.id || "",
   r.bundle || "",
   r.type || "",
-  r.bundleStatus || "unknown",
+  r.bundleStatus || "",
+  r.originalBundle || "",
   r.batchId || "",
   r.batchName || "",
 ];
@@ -112,7 +106,10 @@ const originalPrintValues = (r) => [
   [
     `Bundle: ${r.bundle || "Unidentified"}`,
     `Type: ${r.type || "Unspecified"}`,
-    `Status: ${statusLabel(r.bundleStatus)}`,
+    ...(r.originalBundle
+      ? [`Original bundle reference: ${r.originalBundle}`]
+      : []),
+    ...(r.bundleStatus ? [`Legacy tracking note: ${r.bundleStatus}`] : []),
     `Batch: ${r.batchName || "Existing / manual records"}`,
     `Batch ID: ${r.batchId || "Unknown"}`,
     `Record ID: ${r.id || "Unknown"}`,
@@ -147,7 +144,6 @@ export async function excelReport(m) {
     { width: 20 },
     { width: 22 },
     { width: 20 },
-    { width: 24 },
     { width: 60 },
   ];
   if (m.logo) {

@@ -4,8 +4,7 @@ const file = (name, text) => ({
   mimeType: "text/csv",
   buffer: Buffer.from(text),
 });
-const header =
-  "Date,Samples,Quantity,Remarks,Bundle ID,Sample Type,Bundle Status\n";
+const header = "Date,Samples,Quantity,Remarks,Bundle ID,Sample Type\n";
 async function importBatch(page, name, text) {
   await page.locator("#import-file").setInputFiles(file(name, text));
   await page.locator("#confirm-import").click();
@@ -20,9 +19,9 @@ test("import batches and box operations support bulk correction, replacement, ca
     page,
     "box-1.csv",
     header +
-      "2025-06-01,A,2,Good,Group-A,gel,bundled\n2025-06-01,A,3,Broken seal,Group-A,gel,bundled\n2025-06-01,A,4,Separated,Group-A,gel,loose\n",
+      "2025-06-01,A,2,Good,Group-A,gel\n2025-06-01,A,3,Broken seal,Group-A,gel\n2025-06-01,A,4,Separated,Group-A,gel\n",
   );
-  await expect(page.locator("#boxes .quantity")).toHaveText(["5", "4"]);
+  await expect(page.locator("#boxes .quantity")).toHaveText(["9"]);
   await page.locator("#boxes summary").first().click();
   await expect(page.locator(".remark-breakdown").first()).toContainText(
     "2 units",
@@ -34,7 +33,7 @@ test("import batches and box operations support bulk correction, replacement, ca
   await importBatch(
     page,
     "box-2.csv",
-    header + "2025-06-01,B,7,Other box,Group-B,paste,bundled\n",
+    header + "2025-06-01,B,7,Other box,Group-B,paste\n",
   );
   await page.locator("#batches-open").click();
   await expect(page.locator("#batch-list tbody tr")).toHaveCount(2);
@@ -61,7 +60,7 @@ test("import batches and box operations support bulk correction, replacement, ca
   );
   const corrected =
     header +
-    "2025-06-01,A,6,Corrected quantity,Group-A,gel,bundled\n2025-06-01,A,1,Found loose,Group-A,gel,loose\n";
+    "2025-06-01,A,6,Corrected quantity,Group-A,gel\n2025-06-01,A,1,Found loose,Group-A,gel\n";
   await page
     .locator("#replace-file")
     .setInputFiles(file("corrected.csv", corrected));
@@ -121,7 +120,7 @@ test("failed replacements and storage errors leave existing records intact", asy
   await importBatch(
     page,
     "source.csv",
-    header + "2025-06-01,A,5,Original,Group-A,gel,bundled\n",
+    header + "2025-06-01,A,5,Original,Group-A,gel\n",
   );
   await page.locator('[data-manage-box="1"]').click();
   page.once("dialog", (d) => d.accept());
@@ -135,10 +134,7 @@ test("failed replacements and storage errors leave existing records intact", asy
   await page
     .locator("#replace-file")
     .setInputFiles(
-      file(
-        "valid.csv",
-        header + "2025-06-01,A,8,Updated,Group-A,gel,bundled\n",
-      ),
+      file("valid.csv", header + "2025-06-01,A,8,Updated,Group-A,gel\n"),
     );
   await page.evaluate(() => {
     const original = Storage.prototype.setItem;

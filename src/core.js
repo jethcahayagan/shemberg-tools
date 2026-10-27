@@ -6,21 +6,28 @@ export function boxKey(value) {
   const s = String(value ?? "").trim();
   return /^\d+$/.test(s) ? s.replace(/^0+(?=\d)/, "") : s.toUpperCase();
 }
+export function autoBundle(record) {
+  return `${String(record.code ?? "")
+    .trim()
+    .toUpperCase()} · ${String(record.sampleDate || "DATE NOT RECORDED").trim()}`;
+}
 export function normalize(input) {
   const date = String(input.date ?? "").trim(),
     code = String(input.code ?? "").trim(),
     description = String(input.description ?? "").trim(),
     box = String(input.box ?? "").trim(),
     remarks = String(input.remarks ?? "");
-  const bundle = String(input.bundle ?? "").trim(),
+  const bundle = autoBundle(input),
     type = String(input.type ?? "").trim();
-  const bundleStatus = String(input.bundleStatus || "unknown")
-    .trim()
-    .toLowerCase();
-  if (!["bundled", "loose", "unknown"].includes(bundleStatus))
-    throw Error("Bundle Status must be bundled, loose, or unknown.");
-  if (bundle.length > 100 || type.length > 100)
-    throw Error("Bundle ID and Sample Type must be at most 100 characters.");
+  const suppliedBundle = String(input.bundle ?? "").trim();
+  const originalBundle = String(
+    input.originalBundle ||
+      (suppliedBundle && suppliedBundle !== bundle ? suppliedBundle : ""),
+  );
+  if (type.length > 100 || originalBundle.length > 200)
+    throw Error(
+      "Sample Type must be at most 100 characters; original bundle reference at most 200.",
+    );
   const quantity = Number(input.quantity);
   const sampleDate = String(input.sampleDate ?? "").trim();
   if (
@@ -60,8 +67,8 @@ export function normalize(input) {
     remarks,
     sampleDate,
     bundle,
+    originalBundle,
     type,
-    bundleStatus,
   };
 }
 export function fingerprint(r) {
@@ -73,9 +80,8 @@ export function fingerprint(r) {
     boxKey(r.box),
     r.remarks,
     r.sampleDate || "",
-    r.bundle || "",
+    r.originalBundle || "",
     r.type || "",
-    r.bundleStatus || "unknown",
   ]);
 }
 export function compareSamples(a, b) {
@@ -113,19 +119,15 @@ export function consolidate(records) {
         r.date,
         r.sampleDate || `undated-original-${index}`,
         r.code.toUpperCase(),
-        r.bundle || "",
         r.type || "",
-        r.bundleStatus || "unknown",
-        r.bundle && r.type ? "" : `unidentified-source-${index}`,
       ]);
     if (!b.entries.has(k))
       b.entries.set(k, {
         date: r.date,
         sampleDate: r.sampleDate,
         code: r.code,
-        bundle: r.bundle || "",
+        bundle: autoBundle(r),
         type: r.type || "",
-        bundleStatus: r.bundleStatus || "unknown",
         quantity: 0,
         sources: [],
         descriptions: [],
@@ -237,7 +239,8 @@ const aliases = {
   remarks: ["remarks", "notes"],
   bundle: ["bundleid", "bundlenumber", "bundleno", "bundle", "bundlegroup"],
   type: ["sampletype", "type", "producttype"],
-  bundleStatus: ["bundlestatus", "status"],
+  bundleStatus: ["legacybundlestatus", "bundlestatus"],
+  originalBundle: ["originalbundleid"],
   batchName: ["importbatch", "batchname"],
   batchId: ["batchid"],
   sampleDate: ["sampledate", "date", "preparationdate"],
@@ -278,7 +281,7 @@ export function importRows(rows, defaults = {}) {
         );
         if (mapping.date < 0) r.date = defaults.inventoryDate || "";
         if (mapping.box < 0) r.box = defaults.box || "";
-        for (const key of ["bundle", "type", "bundleStatus"])
+        for (const key of ["type"])
           if (mapping[key] < 0) r[key] = defaults[key] || "";
         if (!defaults.allowUndated && !String(r.sampleDate ?? "").trim())
           throw Error("Date (sample date) is required.");
@@ -312,12 +315,6 @@ export function importRows(rows, defaults = {}) {
     });
 }
 
-export const statusLabel = (value) =>
-  ({
-    bundled: "In bundle",
-    loose: "Loose / separated from bundle",
-    unknown: "Unknown",
-  })[value || "unknown"];
 export function importBatches(records) {
   const groups = new Map();
   for (const r of records) {
@@ -353,7 +350,7 @@ export function replaceScope(records, ids, incoming) {
 }
 export function updateScope(records, ids, changes) {
   const target = new Set(ids),
-    allowed = ["box", "date", "bundle", "type", "bundleStatus", "batchName"];
+    allowed = ["box", "date", "type", "batchName"];
   const patch = Object.fromEntries(
     Object.entries(changes).filter(([k]) => allowed.includes(k)),
   );

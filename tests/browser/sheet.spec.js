@@ -3,9 +3,7 @@ test("sheet columns, original values, sample date consolidation, session isolati
   page,
 }) => {
   await page.goto("/");
-  await page.locator("#entry-bundle").fill("Group-A");
   await page.locator("#entry-type").fill("paste");
-  await page.locator("#entry-status").selectOption("bundled");
   await page.locator("#inventory-session-date").fill("2026-10-24");
   await page.locator("#entry-box").fill("1 (Brown)");
   await page.locator("#add").click();
@@ -76,5 +74,72 @@ test("sheet columns, original values, sample date consolidation, session isolati
   await expect(page.locator("#report-content")).toContainText("2025-06-02");
   await expect(page.locator("#report-content")).toContainText(
     "Dates of Inventory: 2026-10-24",
+  );
+});
+
+test("automatic bundle ID needs no manual assignment and no status controls", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(
+    page.locator("#entry-status,#status-filter,[name=bundleStatus]"),
+  ).toHaveCount(0);
+  await page.locator("#entry-box").fill("1");
+  await page.locator("#inventory-session-date").fill("2026-10-24");
+  for (const [quantity, remarks] of [
+    [2, "Complete packet"],
+    [3, "Separated items"],
+  ]) {
+    await page.locator("#add").click();
+    await page.locator("[name=code]").fill("Auto-A");
+    await page.locator("[name=sampleDate]").fill("2025-06-01");
+    await expect(page.locator("[name=bundle]")).toHaveValue(
+      "AUTO-A · 2025-06-01",
+    );
+    await expect(page.locator("[name=bundle]")).toHaveAttribute("readonly", "");
+    await page.locator("[name=quantity]").fill(String(quantity));
+    await page.locator("[name=remarks]").fill(remarks);
+    await page
+      .getByRole("button", { name: "Save record", exact: true })
+      .click();
+  }
+  await expect(page.locator("#boxes .quantity")).toHaveText("5");
+  await page.locator("#boxes summary").click();
+  await expect(page.locator("#boxes .remark-breakdown")).toContainText(
+    "2 units",
+  );
+  await expect(page.locator("#boxes .remark-breakdown")).toContainText(
+    "3 units",
+  );
+  await expect(page.locator("#boxes .remark-breakdown")).toContainText(
+    "Separated items",
+  );
+  await page.reload();
+  await expect(page.locator("#boxes .quantity")).toHaveText("5");
+});
+
+test("identical encoded source entries are kept by default and summed rather than discarded", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.locator("#inventory-session-date").fill("2026-10-24");
+  await page.locator("#entry-box").fill("1");
+  await page
+    .locator("#import-file")
+    .setInputFiles({
+      name: "repeat.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(
+        "Date,Samples,Quantity,Remarks\n2025-06-01,A,2,Same note\n2025-06-01,A,2,Same note\n",
+      ),
+    });
+  await expect(page.locator("#import-summary")).toContainText(
+    "1 possible duplicates",
+  );
+  await expect(page.locator("#skip-duplicates")).not.toBeChecked();
+  await page.locator("#confirm-import").click();
+  await expect(page.locator("#boxes .quantity")).toHaveText("4");
+  await expect(page.locator("#boxes summary")).toContainText(
+    "2 source entries",
   );
 });
