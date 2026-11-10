@@ -99,6 +99,7 @@ export function repairRegistration(
   const registryEvents = [...(state.registryEvents || [])];
   // A mismatched link is repaired only with a unique matching name AND CAS in the registry.
   for (const b of next.bottles.filter((b) => b.section === "raw")) {
+    b.stockGroup = tracingDetails(b, defs).stockGroup;
     let source =
       defs.find((c) => c.id === b.catalogId) ||
       defs.find((c) => c.legacyBottleKey === b.id);

@@ -39,9 +39,18 @@ import {
 } from "./readable-reports.js";
 import { savedSuggestions } from "./suggestions.js";
 import supplement from "./inventory-supplement.json";
+import baselineExtras from "./registry-baseline-extras.json";
+import enrichment from "./registry-enrichment.json";
+import preloadedRecords from "./preloaded-records.json";
+import {
+  initializeInventory,
+  prepareInventory,
+  seedFromDocument,
+  personalizedHtml,
+} from "./startup.js";
+const automaticAdditions = [...baselineExtras, ...supplement];
 import {
   repairRegistration,
-  updateInventoryBackup,
   nextBottleDetails,
   bottleTemplate,
   stockCode,
@@ -61,18 +70,36 @@ let state = emptyState(),
   sort = "name",
   logQuery = "",
   pendingRestore = null;
+let startupMessage = "";
 try {
-  const saved = localStorage.getItem(KEY);
-  if (saved) {
-    const parsed = validateBackup(JSON.parse(saved));
-    catalog = chemicalRegistry(sourceCatalog, parsed);
-    state = upgradeState(parsed, catalog);
-  }
+  const initialized = initializeInventory(
+    localStorage,
+    KEY,
+    seedFromDocument(document) || preloadedRecords,
+    sourceCatalog,
+    automaticAdditions,
+    enrichment,
+  );
+  state = initialized.state;
+  catalog = chemicalRegistry(sourceCatalog, state);
+  if (initialized.updated)
+    startupMessage = `Updated app ready: ${catalog.length} chemical registry entries · ${state.bottles.length} bottle records loaded. Your existing records remain editable.`;
 } catch (e) {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw)
+      state = upgradeState(validateBackup(JSON.parse(raw)), sourceCatalog);
+    else {
+      const seed = seedFromDocument(document) || preloadedRecords;
+      if (seed) state = validateBackup(seed);
+    }
+  } catch {}
+  catalog = chemicalRegistry(sourceCatalog, state);
   storageError =
-    "Saved inventory could not be opened. It has not been overwritten. Export the stored data below before restoring a valid backup. " +
+    "Automatic update could not be saved. Existing browser records have not been replaced. Download a backup before making changes. " +
     e.message;
 }
+
 const app = document.querySelector("#chem-app");
 const esc = (x) =>
   String(x ?? "").replace(
@@ -279,7 +306,7 @@ function render() {
       "",
     )}</nav><div class="sidebar-bottom"><p class="tool-credit">Shemberg QA Lab Chemicals Inventory</p><p class="creator-credit">Created by Jermaine Theus Cahayagan<br>© ${new Date().getFullYear()} Jermaine Theus Cahayagan</p><p>Offline · saved in this browser</p></div></aside>
   <main><div class="page"><header class="page-heading"><h1>${title}</h1><div class="heading-actions">${view === "inventory" || view === "archive" || view === "removed" ? '<button class="button secondary" id="export-open">Export</button><button class="button primary" id="add-bottle">Add bottle</button>' : view === "catalog" ? '<button class="button secondary" id="repair-numbering">Fix numbering / update list</button><button class="button secondary" id="import-registry">Import list</button><button class="button primary" id="new-chemical">Add chemical</button>' : view === "log" ? '<button class="button secondary" id="export-log">Export all records</button>' : ""}</div></header>
-  ${state.bottles.length && state.numberingVersion !== 2 ? '<p class="notice">Legacy registration labels detected. Chemical registry → Fix numbering / update list previews code corrections and preserves your records.</p>' : ""}${storageError ? `<div class="notice danger">${esc(storageError)} <button id="recover-data">Download stored data</button></div>` : ""}
+  ${startupMessage ? `<p class="notice">${esc(startupMessage)} <button class="text-button" id="dismiss-startup">Dismiss</button></p>` : ""}${state.bottles.length && state.numberingVersion !== 2 ? '<p class="notice">Legacy registration labels detected. Chemical registry → Fix numbering / update list previews code corrections and preserves your records.</p>' : ""}${storageError ? `<div class="notice danger">${esc(storageError)} <button id="recover-data">Download stored data</button></div>` : ""}
   ${
     view === "inventory" || view === "archive" || view === "removed"
       ? `<p class="inventory-summary">${view === "archive" ? "Disposed containers · " : section === "raw" ? `${catalog.length} chemicals in registry · ` : ""}${view === "removed" ? `${rows.length} removed bottle records` : view === "archive" ? `${rows.length} archived containers` : `${bottles.length} bottles recorded · ${bottles.filter((b) => alerts(b).length).length} with alerts`}</p>
@@ -363,7 +390,7 @@ function eventTable(events) {
     : '<div class="empty compact"><h3>No log entries yet</h3><p>Register a bottle to begin its history.</p></div>';
 }
 function backupView() {
-  return `<div class="guide-grid"><section class="guide-card"><h2>Backup and restore</h2><p>Before replacing this HTML with an update, download a JSON backup. Keep the same file name, location and browser profile. If your records are not visible in the updated file, restore that backup.</p><p>Download a JSON backup after each lab session. It saves quantities, bottle details and the complete logbook. Excel, Word, PDF and CSV are reports, not restorable backups.</p><div class="button-group"><button class="button primary" id="backup-download">Download backup</button><button class="button secondary" id="backup-restore">Restore backup</button></div><p class="quiet">${state.bottles.length} bottles recorded · ${state.events.length} log entries</p><p>Data is stored in this browser. Keep the same browser profile and HTML file location; back up before moving the file or clearing browser data.</p></section><section class="guide-card"><h2>Registry, disposal and exports</h2><p>Use Chemical registry to add a chemical or edit its shared identity. Bottle quantities, lots and storage stay unchanged; edits are logged.</p><p>Use Disposal on a bottle to suggest it for disposal. Confirm disposal only after the entire container has been disposed; its record moves to Disposal archive with the prior quantity and history retained. Unmeasured stock has a Suggest disposal action.</p><p>Use Export → Chemical category for acids, bases, salts, solvents and other groups. Current search, storage and stock-group filters still apply. Export from the archive for disposed records.</p></section><section class="guide-card"><h2>Import, overview and reports</h2><p>Chemical registry → Import list accepts CSV or Excel, shows duplicate checks and proposed codes, and saves only selected additions. Numbering is based on the records loaded in this browser; restore your latest backup before importing into a new file.</p><p>Chemical overview counts recorded bottles and shows separate known gram and milliliter totals. View bottles lists the contributing containers and flags.</p><p>Create report lets you choose inventory, overview or activity log, individual rows, and inventory columns. Reports are for reading; JSON remains the full restorable backup.</p><p>Delete record removes mistaken input from working stock without changing its stored quantity. Removed records lets you restore it with a reason. Disposal remains a separate action.</p><p>Shelf-life review defaults to 24 months when expiration is missing. Set manufacture/receipt dates and optional after-opening months in Shelf-life review settings. Review flags do not replace label/SDS guidance or establish expiry.</p></section><section class="guide-card"><h2>Measurements</h2><p>Net mass = gross bottle weight − empty container weight. Without a known tare, net stock remains unknown. Use Withdraw → Before / after bottle weights to log grams removed and keep the latest gross reading.</p><p>1 cm³ = 1 mL. Converting between grams and milliliters requires the chemical’s verified density in g/mL: volume = mass ÷ density.</p><p>Full, ¾, ½, ¼ and Empty are visual estimates. Liquid height in cm or inches can be logged separately. Neither observation changes the measured balance.</p></section><details class="form-details"><summary>Stock corrections and source information</summary><p>Use Physical inventory to enter a new measured balance with a reason. Previous balances remain in the logbook. Use Correct details for metadata changes and Add bottle for a different lot or container.</p><p>The 136 default stocks retain the information from your locator, including repeated names in different source rows. No quantities, densities or purity values are assumed. Source hazards and locations should be verified against labels and SDS.</p><p>This local app has no shared accounts, electronic signatures or tamper-proof audit trail. Blank dates and minimum levels mean not recorded.</p></details></div>`;
+  return `<div class="guide-grid"><section class="guide-card"><h2>Backup and restore</h2><p>Before replacing this HTML with an update, download a JSON backup. Keep the same file name, location and browser profile. If your records are not visible in the updated file, restore that backup.</p><p>Download a JSON backup after each lab session. It saves quantities, bottle details and the complete logbook. Excel, Word, PDF and CSV are reports, not restorable backups.</p><div class="button-group"><button class="button primary" id="backup-download">Download backup</button><button class="button secondary" id="save-personalized">Save complete app with my records</button><button class="button secondary" id="backup-restore">Restore backup</button></div><p class="quiet">${state.bottles.length} bottles recorded · ${state.events.length} log entries</p><p>Data is stored in this browser. Keep the same browser profile and HTML file location; back up before moving the file or clearing browser data.</p></section><section class="guide-card"><h2>Registry, disposal and exports</h2><p>Use Chemical registry to add a chemical or edit its shared identity. Bottle quantities, lots and storage stay unchanged; edits are logged.</p><p>Use Disposal on a bottle to suggest it for disposal. Confirm disposal only after the entire container has been disposed; its record moves to Disposal archive with the prior quantity and history retained. Unmeasured stock has a Suggest disposal action.</p><p>Use Export → Chemical category for acids, bases, salts, solvents and other groups. Current search, storage and stock-group filters still apply. Export from the archive for disposed records.</p></section><section class="guide-card"><h2>Import, overview and reports</h2><p>Chemical registry → Import list accepts CSV or Excel, shows duplicate checks and proposed codes, and saves only selected additions. Numbering is based on the records loaded in this browser; restore your latest backup before importing into a new file.</p><p>Chemical overview counts recorded bottles and shows separate known gram and milliliter totals. View bottles lists the contributing containers and flags.</p><p>Create report lets you choose inventory, overview or activity log, individual rows, and inventory columns. Reports are for reading; JSON remains the full restorable backup.</p><p>Delete record removes mistaken input from working stock without changing its stored quantity. Removed records lets you restore it with a reason. Disposal remains a separate action.</p><p>Shelf-life review defaults to 24 months when expiration is missing. Set manufacture/receipt dates and optional after-opening months in Shelf-life review settings. Review flags do not replace label/SDS guidance or establish expiry.</p></section><section class="guide-card"><h2>Measurements</h2><p>Net mass = gross bottle weight − empty container weight. Without a known tare, net stock remains unknown. Use Withdraw → Before / after bottle weights to log grams removed and keep the latest gross reading.</p><p>1 cm³ = 1 mL. Converting between grams and milliliters requires the chemical’s verified density in g/mL: volume = mass ÷ density.</p><p>Full, ¾, ½, ¼ and Empty are visual estimates. Liquid height in cm or inches can be logged separately. Neither observation changes the measured balance.</p></section><details class="form-details"><summary>Stock corrections and source information</summary><p>Use Physical inventory to enter a new measured balance with a reason. Previous balances remain in the logbook. Use Correct details for metadata changes and Add bottle for a different lot or container.</p><p>The registry combines your locator, saved chemical definitions and additions from the November inventory, including distinct grades and source rows. No quantities, densities or purity values are assumed. Source hazards and locations should be verified against labels and SDS.</p><p>This local app has no shared accounts, electronic signatures or tamper-proof audit trail. Blank dates and minimum levels mean not recorded.</p></details></div>`;
 }
 function bind() {
   document.querySelectorAll("[data-nav]").forEach(
@@ -399,6 +426,21 @@ function bind() {
     view = "inventory";
     query = storage = category = status = "";
     render();
+  });
+  on("dismiss-startup", "click", () => {
+    startupMessage = "";
+    render();
+  });
+  on("save-personalized", "click", () => {
+    try {
+      download(
+        new Blob([personalizedHtml(document, state)], { type: "text/html" }),
+        "Shemberg-Chemicals-Inventory.html",
+      );
+      toast("Complete app saved with your current records.");
+    } catch (err) {
+      toast(err.message, true);
+    }
   });
   on("new-chemical", "click", () => chemicalForm());
   on("repair-numbering", "click", () => repairForm());
@@ -548,9 +590,11 @@ function bind() {
       if (file.size > 30 * 1024 * 1024)
         throw new Error("Backup exceeds the 30 MB limit.");
       const parsed = validateBackup(JSON.parse(await file.text()));
-      pendingRestore = upgradeState(
+      pendingRestore = prepareInventory(
         parsed,
-        chemicalRegistry(sourceCatalog, parsed),
+        sourceCatalog,
+        automaticAdditions,
+        enrichment,
       );
       showModal(
         "Restore workspace",
@@ -774,6 +818,7 @@ function dispositionForm(key, sourceOnly = false) {
   const b = sourceOnly
     ? catalog.find((c) => c.id === key)
     : state.bottles.find((b) => b.id === key);
+  const proposed = sourceOnly ? nextBottleDetails(state, b) : null;
   showModal(
     "Disposal record",
     `<form id="disposal-form"><p><strong>${esc(b.name)}</strong>${b.bottleId ? " · " + esc(b.bottleId) : ""}</p>${sourceOnly ? '<p class="quiet">This creates a bottle record with unknown quantity for disposal review.</p>' : ""}${select(
@@ -787,9 +832,10 @@ function dispositionForm(key, sourceOnly = false) {
             ["archived", "Confirm disposal and archive"],
           ],
       b.disposalStatus === "suggested" ? "archived" : "suggested",
-    )}<div class="form-grid">${sourceOnly ? field("bottleId", "Bottle / container ID", "", "text", true) : ""}${field("analyst", "Recorded by", "", "text", true)}${field("reason", "Reason / disposal details", "", "text", true)}${field("reference", "Disposal reference / receipt (optional)")}</div><label class="check" id="confirm-disposal-label"><input type="checkbox" name="confirm">I confirm this entire container has been disposed. Archive its record and remove it from usable stock.</label><div class="dialog-actions"><button class="button secondary" type="button" data-close>Cancel</button><button class="button primary" type="submit">Save disposal record</button></div></form>`,
+    )}<div class="form-grid">${sourceOnly ? field("bottleId", "Bottle / container ID", proposed.bottleId, "text", true) : ""}${field("analyst", "Recorded by", "", "text", true)}${field("reason", "Reason / disposal details", "", "text", true)}${field("reference", "Disposal reference / receipt (optional)")}</div><label class="check" id="confirm-disposal-label"><input type="checkbox" name="confirm">I confirm this entire container has been disposed. Archive its record and remove it from usable stock.</label><div class="dialog-actions"><button class="button secondary" type="button" data-close>Cancel</button><button class="button primary" type="submit">Save disposal record</button></div></form>`,
   );
   const form = document.querySelector("#disposal-form");
+  if (sourceOnly) form.elements.bottleId.readOnly = true;
   const sync = () => {
     document.querySelector("#confirm-disposal-label").hidden =
       form.elements.status.value !== "archived";
@@ -807,6 +853,8 @@ function dispositionForm(key, sourceOnly = false) {
           state,
           {
             ...b,
+            ...proposed,
+            autoNumbering: true,
             catalogId: b.id,
             section: "raw",
             bottleId: input.bottleId,
@@ -814,6 +862,7 @@ function dispositionForm(key, sourceOnly = false) {
             analyst: input.analyst,
           },
           { method: "unmeasured" },
+          sourceCatalog,
         );
         bottleKey = next.bottles.at(-1).id;
       }
@@ -981,7 +1030,13 @@ function groupForm(key, target, bottleKey = null) {
   };
 }
 function repairForm() {
-  const preview = updateInventoryBackup(state, sourceCatalog, supplement);
+  const preview = prepareInventory(
+    state,
+    sourceCatalog,
+    automaticAdditions,
+    enrichment,
+    { force: true },
+  );
   const changed = preview.bottles.filter((b) => {
     const old = state.bottles.find((x) => x.id === b.id);
     return (
@@ -1010,12 +1065,10 @@ function repairForm() {
     e.preventDefault();
     try {
       commit(
-        updateInventoryBackup(
-          state,
-          sourceCatalog,
-          supplement,
-          Object.fromEntries(new FormData(e.target)),
-        ),
+        prepareInventory(state, sourceCatalog, automaticAdditions, enrichment, {
+          ...Object.fromEntries(new FormData(e.target)),
+          force: true,
+        }),
       );
       toast(
         "Numbering corrected. Download a JSON backup to save this updated copy.",

@@ -1,0 +1,1127 @@
+[
+  {
+    "name": "1-(2-Hydroxy-1-Naphthol-4-Sulphonic Acid",
+    "cas": "116-63-2",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Harmful, Irritant",
+    "inventoryReference": "November 2026 ALL row 13"
+  },
+  {
+    "name": "Acetaldehyde Diethyl Acetal (98%)",
+    "cas": "105-57-7",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Flammability",
+    "inventoryReference": "November 2026 ALL row 15"
+  },
+  {
+    "name": "Acetic Acid",
+    "cas": "64-19-7",
+    "labCode": "G46",
+    "classification": "Organic Acid",
+    "storage": "AR",
+    "hazards": "Corrosive, Irritant, Flammable",
+    "inventoryReference": "November 2026 ALL row 16"
+  },
+  {
+    "name": "Acetone",
+    "cas": "67-64-1",
+    "labCode": "",
+    "classification": "",
+    "storage": "AR",
+    "hazards": "Flammable, Irritant",
+    "inventoryReference": "November 2026 ALL row 18"
+  },
+  {
+    "name": "Activated Charcoal",
+    "cas": "7440-44-0",
+    "labCode": "",
+    "classification": "",
+    "storage": "TV-2/WR",
+    "hazards": "Aspiration Risk",
+    "inventoryReference": "November 2026 ALL row 19"
+  },
+  {
+    "name": "Adipinsaure Reinst",
+    "cas": "124-04-9",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "May cause burn",
+    "inventoryReference": "November 2026 ALL row 20"
+  },
+  {
+    "name": "Aluminum Potassium Sulfate",
+    "cas": "7784-24-9",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Harmful, Irritant",
+    "inventoryReference": "November 2026 ALL row 22"
+  },
+  {
+    "name": "Ammonia",
+    "cas": "7664-41-7",
+    "labCode": "",
+    "classification": "Weak Base",
+    "storage": "AR",
+    "hazards": "toxic, corrosive",
+    "inventoryReference": "November 2026 ALL row 23"
+  },
+  {
+    "name": "Ammonium Carbonate",
+    "cas": "506-87-6",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 25"
+  },
+  {
+    "name": "Ammonium Iron (II) Sulfate",
+    "cas": "7783-85-9",
+    "labCode": "W01",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 28"
+  },
+  {
+    "name": "Ammonium Nitrate",
+    "cas": "6484-52-2",
+    "labCode": "G03",
+    "classification": "Nitrate",
+    "storage": "TIB C10/12",
+    "hazards": "Explosive under heat/shock, Oxidizing",
+    "inventoryReference": "November 2026 ALL row 30"
+  },
+  {
+    "name": "Ammonium Persulfate",
+    "cas": "7727-54-0",
+    "labCode": "G04",
+    "classification": "",
+    "storage": "TIB C14/16",
+    "hazards": "Oxidizer, irritant",
+    "inventoryReference": "November 2026 ALL row 31"
+  },
+  {
+    "name": "Ammonium Sulfate",
+    "cas": "7783-20-2",
+    "labCode": "",
+    "classification": "Sulfate",
+    "storage": "TIB C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 32"
+  },
+  {
+    "name": "Ammonium Thiocyanate",
+    "cas": "1762-95-4",
+    "labCode": "G06",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Toxic if ingested",
+    "inventoryReference": "November 2026 ALL row 33"
+  },
+  {
+    "name": "Arsenic Trioxide",
+    "cas": "1327-53-3",
+    "labCode": "G07",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Carcinogen, toxic",
+    "inventoryReference": "November 2026 ALL row 34"
+  },
+  {
+    "name": "Barium Chloride Di-hydrate",
+    "cas": "10326-27-9",
+    "labCode": "W02",
+    "classification": "Halide Salt",
+    "storage": "TV-2",
+    "hazards": "Toxic if swallowed",
+    "inventoryReference": "November 2026 ALL row 35"
+  },
+  {
+    "name": "Barium Hydroxide",
+    "cas": "17194-00-2",
+    "labCode": "G08",
+    "classification": "Inorganic Base",
+    "storage": "TIB C10/12",
+    "hazards": "Corrosive, Toxic",
+    "inventoryReference": "November 2026 ALL row 36"
+  },
+  {
+    "name": "Boric Acid",
+    "cas": "10043-35-3",
+    "labCode": "",
+    "classification": "Inorganic Acid",
+    "storage": "TIA C14/16",
+    "hazards": "Toxic, Irritant",
+    "inventoryReference": "November 2026 ALL row 37"
+  },
+  {
+    "name": "Butylated Hydroxy Toluene",
+    "cas": "128-37-0",
+    "labCode": "D12",
+    "classification": "",
+    "storage": "WR",
+    "hazards": "skin irritant, toxic to aquatic life",
+    "inventoryReference": "November 2026 ALL row 38"
+  },
+  {
+    "name": "Calcium Acetate",
+    "cas": "62-54-4",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 39"
+  },
+  {
+    "name": "Calcium Carbonate",
+    "cas": "471-34-1",
+    "labCode": "G09",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Low hazard",
+    "inventoryReference": "November 2026 ALL row 40"
+  },
+  {
+    "name": "Calcium Carbonate Precipitated",
+    "cas": "10043-52-4",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA 14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 42"
+  },
+  {
+    "name": "Calcium Chloride",
+    "cas": "7647-17-8",
+    "labCode": "",
+    "classification": "Halide Salt",
+    "storage": "TIB C10/12",
+    "hazards": "Irritant, toxic in high dose",
+    "inventoryReference": "November 2026 ALL row 43"
+  },
+  {
+    "name": "Calcium Chloride Anhydrous",
+    "cas": "10043-52-4",
+    "labCode": "W03",
+    "classification": "",
+    "storage": "TV-2",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 45"
+  },
+  {
+    "name": "Calcium Chloride Dihydrate",
+    "cas": "10035-04-8",
+    "labCode": "F01",
+    "classification": "",
+    "storage": "WR/TV-2",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 46"
+  },
+  {
+    "name": "Calcium Hydrogen Orthophosphate",
+    "cas": "7757-93-9",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 47"
+  },
+  {
+    "name": "Calcium Hydroxide",
+    "cas": "1305-62-0",
+    "labCode": "",
+    "classification": "Inorganic Base",
+    "storage": "TIA C14/16",
+    "hazards": "Hazardous, Irritant, corrosive",
+    "inventoryReference": "November 2026 ALL row 48"
+  },
+  {
+    "name": "Calcium Nitrate",
+    "cas": "10124-37-5",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 50"
+  },
+  {
+    "name": "Calcium Oxalate",
+    "cas": "563-72-4",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIB Cab 10/12",
+    "hazards": "Toxic, Irritant",
+    "inventoryReference": "November 2026 ALL row 51"
+  },
+  {
+    "name": "Cargill Dry Set",
+    "cas": "",
+    "labCode": "",
+    "classification": "",
+    "storage": "TV-2",
+    "hazards": "",
+    "inventoryReference": "November 2026 ALL row 52"
+  },
+  {
+    "name": "Cesium Chloride",
+    "cas": "7647-17-8",
+    "labCode": "",
+    "classification": "Halide Salt",
+    "storage": "TIB C10/12",
+    "hazards": "Toxic",
+    "inventoryReference": "November 2026 ALL row 54"
+  },
+  {
+    "name": "Cobalt (II) Chloride",
+    "cas": "7646-79-9",
+    "labCode": "G59",
+    "classification": "Halide Salt",
+    "storage": "TIB C10/12",
+    "hazards": "carcinogen, mutagen, and reproductive toxin",
+    "inventoryReference": "November 2026 ALL row 56"
+  },
+  {
+    "name": "Conductivity standard",
+    "cas": "",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "irritant",
+    "inventoryReference": "November 2026 ALL row 57"
+  },
+  {
+    "name": "D(+) Glucose",
+    "cas": "50-99-7",
+    "labCode": "W04",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Combustible",
+    "inventoryReference": "November 2026 ALL row 61"
+  },
+  {
+    "name": "Diethylamine",
+    "cas": "109-89-7",
+    "labCode": "",
+    "classification": "",
+    "storage": "AR",
+    "hazards": "flammable, corrosive, toxic",
+    "inventoryReference": "November 2026 ALL row 63"
+  },
+  {
+    "name": "Diphenylamine",
+    "cas": "122-39-4",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Toxic",
+    "inventoryReference": "November 2026 ALL row 64"
+  },
+  {
+    "name": "Dipotassium hydrogen orthophosphate",
+    "cas": "7758-11-4",
+    "labCode": "W12",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "mild irritant to skin, eye, respiratory tract",
+    "inventoryReference": "November 2026 ALL row 65"
+  },
+  {
+    "name": "Di-sodium Hydrogen Phosphate",
+    "cas": "7558-79-4",
+    "labCode": "W13",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "mild irritant to skin, eye, respiratory tract",
+    "inventoryReference": "November 2026 ALL row 66"
+  },
+  {
+    "name": "Di-Sodium Tetraborate Decahydrate",
+    "cas": "1303-96-4",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 67"
+  },
+  {
+    "name": "DPD Free Chlorine Reagent Powder Pillows",
+    "cas": "",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 68"
+  },
+  {
+    "name": "DPD Total Chlorine Reagent Powder Pillows",
+    "cas": "",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 69"
+  },
+  {
+    "name": "Eisin (II) Chloride Tetrahydrate",
+    "cas": "13478-10-9",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Corrosive, Irritant",
+    "inventoryReference": "November 2026 ALL row 72"
+  },
+  {
+    "name": "Eosin",
+    "cas": "17372-87-1",
+    "labCode": "G13",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Hazardous",
+    "inventoryReference": "November 2026 ALL row 73"
+  },
+  {
+    "name": "Erichriom Black T",
+    "cas": "1787-61-7",
+    "labCode": "G15",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 74"
+  },
+  {
+    "name": "Ammonium Iron (II) Sulfate",
+    "cas": "7783-85-9",
+    "labCode": "W01",
+    "classification": "Sulfate",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant, toxic to aquatic life",
+    "inventoryReference": "November 2026 ALL row 77"
+  },
+  {
+    "name": "Formic Acid",
+    "cas": "64-18-6",
+    "labCode": "G50",
+    "classification": "Organic Acid",
+    "storage": "AR",
+    "hazards": "Corrosive, Flammable",
+    "inventoryReference": "November 2026 ALL row 78"
+  },
+  {
+    "name": "Glycerol",
+    "cas": "56-81-5",
+    "labCode": "D14",
+    "classification": "",
+    "storage": "TIIB C14/16",
+    "hazards": "combustible when heated, explosive if mixed with stong oxidizers",
+    "inventoryReference": "November 2026 ALL row 80"
+  },
+  {
+    "name": "Hydrochlric Acid",
+    "cas": "7647-01-0",
+    "labCode": "G51",
+    "classification": "",
+    "storage": "AR",
+    "hazards": "Corrosive, Irritant",
+    "inventoryReference": "November 2026 ALL row 81"
+  },
+  {
+    "name": "Hydrochlric Acid",
+    "cas": "7647-01-0",
+    "labCode": "G51",
+    "classification": "Inorganic Acid",
+    "storage": "AR",
+    "hazards": "Corrosive, Irritant",
+    "inventoryReference": "November 2026 ALL row 82"
+  },
+  {
+    "name": "Hydroquinone",
+    "cas": "123-31-9",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Irritant, mutagen, carcinogen",
+    "inventoryReference": "November 2026 ALL row 83"
+  },
+  {
+    "name": "Hydroxylammonium Chloride",
+    "cas": "5470-11-1",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Toxic, Irritant",
+    "inventoryReference": "November 2026 ALL row 84"
+  },
+  {
+    "name": "Iodine Resublimed",
+    "cas": "7553-56-2",
+    "labCode": "",
+    "classification": "",
+    "storage": "TV-2",
+    "hazards": "Irritant, toxic to aquatic life",
+    "inventoryReference": "November 2026 ALL row 87"
+  },
+  {
+    "name": "Iron (III) Nitrate AAS Standard",
+    "cas": "7782-61-8",
+    "labCode": "",
+    "classification": "Nitrate",
+    "storage": "TIB C10/12",
+    "hazards": "Irritant, Corrosive",
+    "inventoryReference": "November 2026 ALL row 89"
+  },
+  {
+    "name": "Iron (III) Chloride hexahydrate",
+    "cas": "10025-77-1",
+    "labCode": "W07",
+    "classification": "Halide Salt",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant, corrosive",
+    "inventoryReference": "November 2026 ALL row 91"
+  },
+  {
+    "name": "Lead Nitrate",
+    "cas": "10099-74-8",
+    "labCode": "G19",
+    "classification": "Nitrate",
+    "storage": "TIA C14/16",
+    "hazards": "Toxic, Hazardous",
+    "inventoryReference": "November 2026 ALL row 92"
+  },
+  {
+    "name": "L-Glutaminsaure",
+    "cas": "56-85-9",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "none",
+    "inventoryReference": "November 2026 ALL row 94"
+  },
+  {
+    "name": "Magnesium Chloride",
+    "cas": "7786-30-3",
+    "labCode": "",
+    "classification": "Halide Salt",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 95"
+  },
+  {
+    "name": "Magnesium Chloride Hexahydrate",
+    "cas": "7791-18-6",
+    "labCode": "",
+    "classification": "",
+    "storage": "WR",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 96"
+  },
+  {
+    "name": "Magnesium Sulfate",
+    "cas": "7487-88-9",
+    "labCode": "",
+    "classification": "Sulfate",
+    "storage": "TIB C10/12",
+    "hazards": "Respiratory irritant",
+    "inventoryReference": "November 2026 ALL row 97"
+  },
+  {
+    "name": "Magnesium Sulphate Hydrated",
+    "cas": "10034-99-8",
+    "labCode": "W09",
+    "classification": "",
+    "storage": "WR",
+    "hazards": "Mild Irritant",
+    "inventoryReference": "November 2026 ALL row 98"
+  },
+  {
+    "name": "Manganese(II) Sulfate Monohydrate",
+    "cas": "10034-96-5",
+    "labCode": "W08",
+    "classification": "Sulfate",
+    "storage": "TIB C10/12",
+    "hazards": "Toxic, Hazardous",
+    "inventoryReference": "November 2026 ALL row 99"
+  },
+  {
+    "name": "Mercury Sulfate",
+    "cas": "7783-35-9",
+    "labCode": "W10",
+    "classification": "Sulfate",
+    "storage": "TIB C10/12",
+    "hazards": "Toxic, Hazardous",
+    "inventoryReference": "November 2026 ALL row 100"
+  },
+  {
+    "name": "Methanol",
+    "cas": "67-56-1",
+    "labCode": "G52",
+    "classification": "",
+    "storage": "AR",
+    "hazards": "highly toxic, flammable",
+    "inventoryReference": "November 2026 ALL row 102"
+  },
+  {
+    "name": "Methyl Orange",
+    "cas": "547-58-0",
+    "labCode": "G22",
+    "classification": "",
+    "storage": "TIB C10/12; TV-2",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 103"
+  },
+  {
+    "name": "Methyl Orange",
+    "cas": "547-58-0",
+    "labCode": "G22",
+    "classification": "",
+    "storage": "TIB C10/12; TV-2",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 103"
+  },
+  {
+    "name": "Methyl Red",
+    "cas": "493-52-7",
+    "labCode": "",
+    "classification": "",
+    "storage": "TV-2",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 104"
+  },
+  {
+    "name": "Methylene Blue",
+    "cas": "61-73-4",
+    "labCode": "G23",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Risk of severe hemolytic anemia",
+    "inventoryReference": "November 2026 ALL row 106"
+  },
+  {
+    "name": "N-(1-naphthyl) Ethlyenediamine Di-hydrochloride",
+    "cas": "1465-25-4",
+    "labCode": "",
+    "classification": "",
+    "storage": "TV-2",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 108"
+  },
+  {
+    "name": "Nitric Acid",
+    "cas": "7697-37-2",
+    "labCode": "G54",
+    "classification": "Inorganic Acid",
+    "storage": "AR",
+    "hazards": "highly corrosive",
+    "inventoryReference": "November 2026 ALL row 109"
+  },
+  {
+    "name": "PEG-6 (PolyoxyEthylene Glycol)",
+    "cas": "25322-68-3",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIIB C14/16",
+    "hazards": "sensitizer, irritant",
+    "inventoryReference": "November 2026 ALL row 113"
+  },
+  {
+    "name": "Peppermint III",
+    "cas": "8006-90-4",
+    "labCode": "D21",
+    "classification": "",
+    "storage": "TIIB C14/16",
+    "hazards": "Toxic and irritant in high dose",
+    "inventoryReference": "November 2026 ALL row 114"
+  },
+  {
+    "name": "Perchloric Acid",
+    "cas": "7601-90-3",
+    "labCode": "G55",
+    "classification": "Inorganic Acid",
+    "storage": "AR",
+    "hazards": "oxidizer, corrosive, explosive",
+    "inventoryReference": "November 2026 ALL row 115"
+  },
+  {
+    "name": "Phenolphthalein",
+    "cas": "77-09-8",
+    "labCode": "G24",
+    "classification": "",
+    "storage": "TIB C10/12; TV-2",
+    "hazards": "carcinogen, mutagen, irritant",
+    "inventoryReference": "November 2026 ALL row 116"
+  },
+  {
+    "name": "Potassium Carbonate Anhydrous",
+    "cas": "548-08-7",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 117"
+  },
+  {
+    "name": "Potassium Chloride",
+    "cas": "7447-40-7",
+    "labCode": "F03",
+    "classification": "Halide Salt",
+    "storage": "WR/TV-2",
+    "hazards": "possess health danger",
+    "inventoryReference": "November 2026 ALL row 118"
+  },
+  {
+    "name": "Potassium Di-chromate",
+    "cas": "7778-50-9",
+    "labCode": "G27",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "highly toxic, carcinogen, oxidizer",
+    "inventoryReference": "November 2026 ALL row 120"
+  },
+  {
+    "name": "Potassium Di-hydrogen Orthophosphate",
+    "cas": "7778-77-0",
+    "labCode": "W11",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 121"
+  },
+  {
+    "name": "Potassium Fluoride",
+    "cas": "7789-23-3",
+    "labCode": "",
+    "classification": "Halide Salt",
+    "storage": "TIA C14/16",
+    "hazards": "Toxic, Corrosive, Irritant",
+    "inventoryReference": "November 2026 ALL row 122"
+  },
+  {
+    "name": "Potassium hydrogen Orthophosphate",
+    "cas": "7778-77-0",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 123"
+  },
+  {
+    "name": "Potassium Hydrogen Phthalate",
+    "cas": "877-24-7",
+    "labCode": "G28",
+    "classification": "",
+    "storage": "TV-2",
+    "hazards": "mMild irritant",
+    "inventoryReference": "November 2026 ALL row 124"
+  },
+  {
+    "name": "Potassium Hydroxide",
+    "cas": "1310-58-3",
+    "labCode": "G62",
+    "classification": "Strong in-organic base",
+    "storage": "TIB C10/12",
+    "hazards": "Corrosive",
+    "inventoryReference": "November 2026 ALL row 125"
+  },
+  {
+    "name": "Potassium Iodide",
+    "cas": "7681-11-0",
+    "labCode": "G29",
+    "classification": "Halide Salt",
+    "storage": "TV-2/WR",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 126"
+  },
+  {
+    "name": "Potassium Nitrate",
+    "cas": "7757-79-1",
+    "labCode": "D01",
+    "classification": "Nitrate",
+    "storage": "TIB C10/12",
+    "hazards": "Oxidizer",
+    "inventoryReference": "November 2026 ALL row 127"
+  },
+  {
+    "name": "Potassium Oxalate",
+    "cas": "583-52-8",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Toxic",
+    "inventoryReference": "November 2026 ALL row 128"
+  },
+  {
+    "name": "Potassium Permanganate",
+    "cas": "7722-64-7",
+    "labCode": "G30",
+    "classification": "",
+    "storage": "AR",
+    "hazards": "corrosive, irritant, oxidizer",
+    "inventoryReference": "November 2026 ALL row 129"
+  },
+  {
+    "name": "Potassium Sodium Tartrate Tetrahydrate",
+    "cas": "6381-59-5",
+    "labCode": "G43",
+    "classification": "",
+    "storage": "TV-2",
+    "hazards": "non-hazardous",
+    "inventoryReference": "November 2026 ALL row 130"
+  },
+  {
+    "name": "Potassium Thiocyanate",
+    "cas": "333-20-0",
+    "labCode": "G31",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Harmful, Toxic",
+    "inventoryReference": "November 2026 ALL row 131"
+  },
+  {
+    "name": "Propane-1, 2-Diol",
+    "cas": "57-55-6",
+    "labCode": "D18",
+    "classification": "",
+    "storage": "TIIB C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 132"
+  },
+  {
+    "name": "Silver Nitrate",
+    "cas": "7761-88-8",
+    "labCode": "G38",
+    "classification": "Nitrate",
+    "storage": "TV-2",
+    "hazards": "Strong oxidizer; highly corrosive, toxic to aquatic life",
+    "inventoryReference": "November 2026 ALL row 134"
+  },
+  {
+    "name": "Silver Sulphate",
+    "cas": "10294-26-5",
+    "labCode": "W14",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Hazardous, Toxic",
+    "inventoryReference": "November 2026 ALL row 135"
+  },
+  {
+    "name": "Sodium Aluminate",
+    "cas": "1302-42-7",
+    "labCode": "",
+    "classification": "Basic Salt",
+    "storage": "TIA C14/16",
+    "hazards": "Corrosive",
+    "inventoryReference": "November 2026 ALL row 136"
+  },
+  {
+    "name": "Sodium Benzoate",
+    "cas": "532-32-1",
+    "labCode": "D02",
+    "classification": "",
+    "storage": "TIB C10/12; WR",
+    "hazards": "low hazard",
+    "inventoryReference": "November 2026 ALL row 137"
+  },
+  {
+    "name": "Sodium Benzoate",
+    "cas": "532-32-1",
+    "labCode": "D02",
+    "classification": "",
+    "storage": "TIB C10/12; WR",
+    "hazards": "low hazard",
+    "inventoryReference": "November 2026 ALL row 137"
+  },
+  {
+    "name": "Sodium Bicarbonate",
+    "cas": "144-55-8",
+    "labCode": "",
+    "classification": "",
+    "storage": "WR",
+    "hazards": "safe",
+    "inventoryReference": "November 2026 ALL row 138"
+  },
+  {
+    "name": "Sodium Carbonate Anhydrous",
+    "cas": "497-19-8",
+    "labCode": "G34",
+    "classification": "",
+    "storage": "TV-2; WR",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 139"
+  },
+  {
+    "name": "Sodium Carbonate Decahydrate",
+    "cas": "6132-02-1",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 140"
+  },
+  {
+    "name": "Sodium Chloride",
+    "cas": "7647-14-5",
+    "labCode": "F04",
+    "classification": "Halide Salt",
+    "storage": "TV-2; WR",
+    "hazards": "Irritant in high doze",
+    "inventoryReference": "November 2026 ALL row 141"
+  },
+  {
+    "name": "Sodium Di-Hydrogen Orthophosphate",
+    "cas": "7558-79-4",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 143"
+  },
+  {
+    "name": "Sodium Fluoride",
+    "cas": "7681-49-4",
+    "labCode": "D11",
+    "classification": "Halide Salt",
+    "storage": "TIA C14/16; WR",
+    "hazards": "Toxic, Irritant",
+    "inventoryReference": "November 2026 ALL row 144"
+  },
+  {
+    "name": "Sodium Fluoride",
+    "cas": "7681-49-4",
+    "labCode": "D11",
+    "classification": "Halide Salt",
+    "storage": "TIA C14/16; WR",
+    "hazards": "Toxic, Irritant",
+    "inventoryReference": "November 2026 ALL row 144"
+  },
+  {
+    "name": "Sodium Hydrogen Carbonate",
+    "cas": "144-55-8",
+    "labCode": "G33",
+    "classification": "",
+    "storage": "TIA C14/16; TIB C10/12; TV-2",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 145"
+  },
+  {
+    "name": "Sodium Hydrogen Carbonate",
+    "cas": "144-55-8",
+    "labCode": "G33",
+    "classification": "",
+    "storage": "TIA C14/16; TIB C10/12; TV-2",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 145"
+  },
+  {
+    "name": "Sodium Hydroxide Pellets",
+    "cas": "1310-73-2",
+    "labCode": "G32",
+    "classification": "Strong in-organic base",
+    "storage": "TIA C14/16; WR; TV-2",
+    "hazards": "Severe Irritant, Corrosive",
+    "inventoryReference": "November 2026 ALL row 146"
+  },
+  {
+    "name": "Sodium Nitrate",
+    "cas": "7631-99-4",
+    "labCode": "",
+    "classification": "Nitrate",
+    "storage": "TIA C14/16",
+    "hazards": "Oxidizer, irritant",
+    "inventoryReference": "November 2026 ALL row 150"
+  },
+  {
+    "name": "Sodium Oxalate",
+    "cas": "62-76-0",
+    "labCode": "G35",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Toxic, irritant",
+    "inventoryReference": "November 2026 ALL row 151"
+  },
+  {
+    "name": "Sodium Saccharine",
+    "cas": "128-44-9",
+    "labCode": "D04",
+    "classification": "",
+    "storage": "WR",
+    "hazards": "generally safe",
+    "inventoryReference": "November 2026 ALL row 152"
+  },
+  {
+    "name": "Sodium Sulfate",
+    "cas": "7757-82-6",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 153"
+  },
+  {
+    "name": "Sodium Sulfite",
+    "cas": "7757-83-7",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Harmful, Irritant",
+    "inventoryReference": "November 2026 ALL row 154"
+  },
+  {
+    "name": "Sodium Tetra-Carbonate",
+    "cas": "497-19-8",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 155"
+  },
+  {
+    "name": "Sodium Thiosulfate",
+    "cas": "7772-98-7",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 156"
+  },
+  {
+    "name": "Sodium Thiosulfate pentahydrate",
+    "cas": "10102-17-7",
+    "labCode": "G37",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Irritant, Allegen",
+    "inventoryReference": "November 2026 ALL row 157"
+  },
+  {
+    "name": "Starch",
+    "cas": "9005-25-8",
+    "labCode": "G39",
+    "classification": "",
+    "storage": "TV-2; WR",
+    "hazards": "respiratory irritant",
+    "inventoryReference": "November 2026 ALL row 160"
+  },
+  {
+    "name": "Sulfuric Acid",
+    "cas": "7664-93-9",
+    "labCode": "G56",
+    "classification": "Inorganic Acid",
+    "storage": "AR",
+    "hazards": "Highly corrosive, explosive",
+    "inventoryReference": "November 2026 ALL row 161"
+  },
+  {
+    "name": "Sulphamic Acid",
+    "cas": "532-14-6",
+    "labCode": "",
+    "classification": "Organic Acid",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 162"
+  },
+  {
+    "name": "Tannic Acid",
+    "cas": "1401-55-4",
+    "labCode": "G40",
+    "classification": "Organic Acid",
+    "storage": "TIB Cab 10/12",
+    "hazards": "Irritant, toxic in high dose",
+    "inventoryReference": "November 2026 ALL row 164"
+  },
+  {
+    "name": "Tetra Sodium Pyrophosphate",
+    "cas": "7722-88-5",
+    "labCode": "D08",
+    "classification": "",
+    "storage": "WR",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 165"
+  },
+  {
+    "name": "Tetrasodium Diphosphate Decahydrate",
+    "cas": "13472-36-1",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 166"
+  },
+  {
+    "name": "ThioAcetamide",
+    "cas": "62-55-5",
+    "labCode": "G42",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Carcinogen, Irritant",
+    "inventoryReference": "November 2026 ALL row 167"
+  },
+  {
+    "name": "Thymolphthalein",
+    "cas": "125-20-2",
+    "labCode": "G41",
+    "classification": "",
+    "storage": "TIB C10/12",
+    "hazards": "Combustible",
+    "inventoryReference": "November 2026 ALL row 168"
+  },
+  {
+    "name": "Titanuim Dioxide",
+    "cas": "13463-67-7",
+    "labCode": "D05",
+    "classification": "",
+    "storage": "WR",
+    "hazards": "carcinogen",
+    "inventoryReference": "November 2026 ALL row 169"
+  },
+  {
+    "name": "Tri-potassium Citrate",
+    "cas": "6100-05-6",
+    "labCode": "",
+    "classification": "",
+    "storage": "TIA Cab 14/16",
+    "hazards": "Decomposition",
+    "inventoryReference": "November 2026 ALL row 171"
+  },
+  {
+    "name": "Uranyl Nitrate",
+    "cas": "13520-83-7",
+    "labCode": "G60",
+    "classification": "Nitrate",
+    "storage": "TV-2",
+    "hazards": "highly roxic; radioactive",
+    "inventoryReference": "November 2026 ALL row 172"
+  },
+  {
+    "name": "Zeodent 115",
+    "cas": "7631-86-9",
+    "labCode": "D26",
+    "classification": "",
+    "storage": "WR",
+    "hazards": "non-hazardous; inert",
+    "inventoryReference": "November 2026 ALL row 174"
+  },
+  {
+    "name": "Zinc Sulfate",
+    "cas": "7733-02-0",
+    "labCode": "",
+    "classification": "Sulfate",
+    "storage": "TIA C14/16",
+    "hazards": "Irritant; highly toxic to aquatic life",
+    "inventoryReference": "November 2026 ALL row 177"
+  },
+  {
+    "name": "Zinc Sulfate Heptahydrate",
+    "cas": "7446-20-0",
+    "labCode": "G61",
+    "classification": "",
+    "storage": "WR",
+    "hazards": "Irritant",
+    "inventoryReference": "November 2026 ALL row 178"
+  }
+]

@@ -1,10 +1,28 @@
 import { test, expect } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 import ExcelJS from "exceljs";
+const initialRegistry = JSON.parse(
+  await readFile("src/chemicals/preloaded-records.json", "utf8"),
+).registry;
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript((registry) => {
+    if (localStorage.getItem("shemberg-qa-chemicals-v1") === null)
+      localStorage.setItem(
+        "shemberg-qa-chemicals-v1",
+        JSON.stringify({
+          schema: 1,
+          bottles: [],
+          events: [],
+          registry,
+          registryEvents: [],
+        }),
+      );
+  }, initialRegistry);
+});
 async function register(page, standard = false) {
   if (standard) await page.locator("[data-nav=standard]").click();
   await page.locator("#add-bottle").click();
-  await page.locator("[name=bottleId]").fill(standard ? "STD-001" : "RAW-001");
+  if (standard) await page.locator("[name=bottleId]").fill("STD-001");
   await page
     .locator("[name=name]")
     .fill(standard ? "Sodium hydroxide" : "Acetic acid");
@@ -55,7 +73,7 @@ test("chemicals register, withdraw, persist, filter, standardize, export and res
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/chemicals.html");
   await page.locator("[data-nav=catalog]").click();
-  await expect(page.locator("#catalog-rows tr")).toHaveCount(136);
+  await expect(page.locator("#catalog-rows tr")).toHaveCount(172);
   await page.locator("#catalog-search").fill("Hydrochl");
   await expect(page.locator("#catalog-rows")).toContainText("Hydrochlric Acid");
   await page.locator("[data-nav=raw]").click();
@@ -98,7 +116,7 @@ test("chemicals register, withdraw, persist, filter, standardize, export and res
       const sheet = wb.getWorksheet("Inventory");
       const stockRow = sheet
         .getRows(5, sheet.rowCount - 4)
-        .find((r) => r.getCell(3).value === "RAW-001");
+        .find((r) => r.getCell(2).value === "Acetic acid");
       expect(stockRow.getCell(4).value).toBe("400 mL");
       expect(sheet.getRow(4).values.slice(1)).toEqual([
         "Code",
@@ -207,14 +225,15 @@ test("failed storage write cannot reduce stock or append a withdrawal", async ({
   await page.reload();
   await expect(page.locator(".stock-amount")).toContainText("500");
   await page.locator("[data-nav=log]").click();
-  await expect(page.locator(".log-table tbody tr")).toHaveCount(1);
+  await expect(page.locator(".log-table")).not.toContainText("Withdrawal");
+  await expect(page.locator(".log-table")).toContainText("Registered");
 });
 
 test("locator stocks are the default raw list and accept quantities without reentering metadata", async ({
   page,
 }) => {
   await page.goto("/chemicals.html");
-  await expect(page.locator("[data-default-stock]")).toHaveCount(136);
+  await expect(page.locator("[data-default-stock]")).toHaveCount(172);
   await expect(page.locator(".stock-amount")).toHaveCount(0);
   await expect(page.locator("h1")).toHaveText("Raw chemicals");
   await page.locator("#search-chem").fill("Hydrochlric");
@@ -234,7 +253,7 @@ test("locator stocks are the default raw list and accept quantities without reen
   await expect(page.locator("#modal")).not.toBeVisible();
   await expect(page.locator(".stock-amount")).toHaveText("750 mL");
   await page.reload();
-  await expect(page.locator("[data-default-stock]")).toHaveCount(135);
+  await expect(page.locator("[data-default-stock]")).toHaveCount(171);
   await expect(page.locator(".stock-amount")).toHaveText("750 mL");
   await page.locator("[data-detail]").first().click();
   await expect(page.locator(".detail-grid")).toContainText("7647-01-0");
@@ -316,19 +335,18 @@ test("tracing update keeps legacy data, groups old stock and records gross-only 
     legacy,
   );
   await page.reload();
-  expect(
-    await page.evaluate(() =>
-      JSON.parse(localStorage.getItem("shemberg-qa-chemicals-v1")),
-    ),
-  ).toEqual(legacy);
+  const migrated = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("shemberg-qa-chemicals-v1")),
+  );
+  expect(migrated.bottles[0].balance).toBeNull();
+  expect(migrated.bottles[0].gross).toBe(500);
+  expect(migrated.events[0]).toEqual(legacy.events[0]);
   await page.locator("#search-chem").fill("Legacy sodium");
   await page.getByRole("button", { name: "Active", exact: true }).click();
   await expect(page.locator("[data-withdraw]")).toHaveCount(0);
   await page.getByRole("button", { name: "Old stock", exact: true }).click();
   await expect(page.locator("[data-withdraw]")).toHaveCount(1);
-  await expect(page.locator(".inventory-table")).toContainText(
-    "OLD STOCK RAW-009",
-  );
+  await expect(page.locator(".inventory-table")).toContainText("Old stock");
   await page.locator("[data-detail]").first().click();
   await page.locator("#detail-edit").click();
   await page.locator("[name=phase]").selectOption("Solid");
@@ -336,7 +354,11 @@ test("tracing update keeps legacy data, groups old stock and records gross-only 
   await expect(page.locator("[name=densityTemp]")).not.toBeVisible();
   await page.locator("[name=formulaWeight]").fill("40");
   await page.locator("[name=labCode]").fill("QA-LAB-77");
-  await page.locator("[name=internalCode]").fill("CHEM-NAOH-09");
+  await expect(page.locator("[name=internalCode]")).toHaveAttribute(
+    "readonly",
+    "",
+  );
+  const generatedCode = await page.locator("[name=internalCode]").inputValue();
   await page.locator("[name=opened]").fill("2026-04-20");
   await page.locator("[name=openedBy]").fill("Jermaine");
   await page.locator("[name=reason]").fill("Add bottle traceability");
@@ -364,7 +386,7 @@ test("tracing update keeps legacy data, groups old stock and records gross-only 
   expect(saved.bottles[0].id).toBe("legacy-bottle");
   expect(saved.bottles[0].balance).toBeNull();
   expect(saved.bottles[0].gross).toBe(480);
-  expect(saved.events[2].quantity).toBe(20);
+  expect(saved.events.find((e) => e.type === "Withdrawal").quantity).toBe(20);
   expect(saved.bottles[0].openedBy).toBe("Jermaine");
   await page.reload();
   await page.locator("#search-chem").fill("QA-LAB-77");
@@ -376,7 +398,7 @@ test("tracing update keeps legacy data, groups old stock and records gross-only 
   await wb.xlsx.load(await bytes(await wait));
   const sheet = wb.getWorksheet("Inventory");
   const values = sheet.getRow(5).values;
-  expect(values).toContain("CHEM-NAOH-09");
+  expect(values).toContain(generatedCode);
   expect(values).toContain("Not entered");
   expect(wb.worksheets.map((w) => w.name)).toEqual(["Inventory"]);
 });
@@ -388,6 +410,7 @@ test("liquid density temperature and solid mass-only entry are available in quan
   await page.locator("#search-chem").fill("Acetic Acid");
   await page
     .getByRole("button", { name: "Enter quantity", exact: true })
+    .first()
     .click();
   await page.locator("[name=phase]").selectOption("Solid");
   await expect(page.locator("[name=density]")).not.toBeVisible();
@@ -443,7 +466,7 @@ test("registry create/edit, category exports and disposal archive keep records a
   await page
     .getByRole("button", { name: "Save chemical", exact: true })
     .click();
-  await expect(page.locator("#catalog-rows tr")).toHaveCount(137);
+  await expect(page.locator("#catalog-rows tr")).toHaveCount(173);
   await page.locator("[data-nav=raw]").click();
   await page.locator("#search-chem").fill("Registry test acid");
   await page
@@ -537,8 +560,11 @@ test("registry create/edit, category exports and disposal archive keep records a
     data.registry.filter((c) => c.name === "Registry acid corrected"),
   ).toHaveLength(1);
   expect(
-    data.registryEvents.filter((e) =>
-      ["Chemical added", "Chemical edited"].includes(e.type),
+    data.registryEvents.filter(
+      (e) =>
+        ["Chemical added", "Chemical edited"].includes(e.type) &&
+        e.chemicalId ===
+          data.registry.find((c) => c.name === "Registry acid corrected").id,
     ),
   ).toHaveLength(2);
   expect(data.bottles[0].disposal.previousBalance).toBe(500);
@@ -568,7 +594,7 @@ test("unmeasured default stock can be suggested for disposal and suggestion can 
   await page
     .getByRole("button", { name: "Suggest disposal", exact: true })
     .click();
-  await page.locator("[name=bottleId]").fill("REVIEW-01");
+  await expect(page.locator("[name=bottleId]")).toHaveAttribute("readonly", "");
   await page.locator("[name=analyst]").fill("JT");
   await page.locator("[name=reason]").fill("Old unidentified amount");
   await page
@@ -644,7 +670,7 @@ test("offline previous-entry suggestions reuse suppliers and people without chan
   await page.reload();
   await page.locator("#add-bottle").click();
   expect(await suggestions("supplier")).toContain("Lab supplier");
-  await page.locator("[name=bottleId]").fill("RAW-NEW-02");
+  await expect(page.locator("[name=bottleId]")).toHaveAttribute("readonly", "");
   await page.locator("[name=name]").fill("New custom chemical");
   await page.locator("[name=supplier]").fill("Another supplier");
   await page.locator("[name=analyst]").fill("Jermaine");
@@ -660,7 +686,7 @@ test("offline previous-entry suggestions reuse suppliers and people without chan
   const current = JSON.parse(
     await page.evaluate(() => localStorage.getItem("shemberg-qa-chemicals-v1")),
   );
-  expect(current.bottles[0].bottleId).toBe("RAW-001");
+  expect(current.bottles[0].bottleId).toMatch(/^RAW-\d+$/);
   expect(current.bottles[0].balance).toBe(400);
   expect(current.bottles[0].supplier).toBe("Lab supplier");
 });
@@ -684,6 +710,18 @@ test("live import numbering, readable selected reports, bottle overview and reve
   await page.evaluate(() => {
     const s = JSON.parse(localStorage.getItem("shemberg-qa-chemicals-v1"));
     s.bottles[0].internalCode = "QA-00990";
+    let master = s.registry.find((c) => c.id === s.bottles[0].catalogId);
+    if (!master) {
+      master = { ...s.bottles[0], id: s.bottles[0].catalogId };
+      s.registry.push(master);
+    }
+    master.internalCode = "QA-00990";
+    s.registryEvents.push({
+      ...s.registryEvents.at(-1),
+      id: "test-running-code-event",
+      chemicalId: master.id,
+      snapshot: { ...master },
+    });
     localStorage.setItem("shemberg-qa-chemicals-v1", JSON.stringify(s));
   });
   await page.reload();
@@ -844,7 +882,7 @@ test("live import numbering, readable selected reports, bottle overview and reve
     current.registry
       .filter((c) => c.internalCode?.startsWith("QA-"))
       .map((c) => c.internalCode),
-  ).toEqual(["QA-00992", "QA-00993"]);
+  ).toEqual(["QA-00990", "QA-00992", "QA-00993"]);
   expect(errors).toEqual([]);
 });
 

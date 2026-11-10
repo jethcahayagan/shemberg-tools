@@ -1,0 +1,28 @@
+[
+  {
+    "name": "Dipotassium hydrogen orthophosphate",
+    "formula": "K₂HPO₄",
+    "cas": "7758-11-4",
+    "classification": "inorganic salt",
+    "storage": "TIB Cab 10/12",
+    "hazards": "Irritant to eyes in high concentrations",
+    "formulaWeight": 174.18,
+    "stockGroup": "old",
+    "internalCode": "OLD STOCK CHEM-153",
+    "id": "registry-extra-dipotassium-hydrogen-orthophosphate",
+    "sourceGroup": "Existing additional chemical definition"
+  },
+  {
+    "name": "Sodium Oxalate",
+    "formula": "(COONa)₂",
+    "cas": "62-76-0",
+    "classification": "inorganic salt",
+    "storage": "TIB Cab 10/12",
+    "hazards": "Toxic",
+    "formulaWeight": 132,
+    "stockGroup": "old",
+    "internalCode": "CHEM-152",
+    "id": "registry-extra-sodium-oxalate",
+    "sourceGroup": "Existing additional chemical definition"
+  }
+]

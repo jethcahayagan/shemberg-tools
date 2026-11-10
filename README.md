@@ -106,4 +106,4 @@ For web hosting, publish the contents of dist/ to a static host. Use `npm run bu
 
 A separate offline chemical inventory is available in [standalone/Shemberg-Chemicals-Inventory.html](standalone/Shemberg-Chemicals-Inventory.html). It includes the supplied 136-entry chemical locator, bottle/lot tracking, measured stocks, withdrawal logbooks, standardized solutions, alerts, and Excel/Word/PDF exports. See [CHEMICALS-README.md](CHEMICALS-README.md) for use, backups, measurement rules, and development commands.
 
-Download the [complete Chemicals Inventory ZIP](standalone/Shemberg-Chemicals-Inventory.zip) for the offline app, a local JSON backup updater, start instructions and identity-review list. Personal backup files are not part of the download.
+Download the [complete Chemicals Inventory ZIP](standalone/Shemberg-Chemicals-Inventory.zip) for the offline app, a local JSON backup updater, start instructions and identity-review list. The supplied November 10 records are preloaded with the owner’s explicit permission. Existing browser records take priority and receive the registry update automatically.

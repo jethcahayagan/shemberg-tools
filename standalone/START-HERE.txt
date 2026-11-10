@@ -1,15 +1,21 @@
 SHEMBERG QA LAB CHEMICALS INVENTORY
 
-UPDATE YOUR EXISTING RECORDS
-1. Keep your original JSON backup unchanged.
-2. Open Shemberg-Backup-Updater.html in your browser.
-3. Choose your existing JSON backup and click Download updated JSON backup.
-4. Open Shemberg-Chemicals-Inventory.html. Under Backups & guide, restore the updated JSON.
+OPEN THE UPDATED APP
+1. Extract this ZIP to a folder.
+2. Open Shemberg-Chemicals-Inventory.html in your browser.
 
-The updater works locally and never uploads your records. Original quantities, bottle keys and historical logs are retained.
+The supplied November 10 backup loads automatically: 52 bottle records and 172 registry entries after reconciliation. No separate updater or JSON restore is needed to start.
 
-The app has Set Active / Set Old stock buttons, automatic chemical codes, fraction bottle labels and copied editable details when adding a bottle.
+If this browser already has inventory records, those records take priority over the bundled backup. Missing registry definitions and numbering corrections are applied automatically. Before the first automatic update, the previous browser workspace is retained as a recovery copy.
 
-Registry-identity-review.csv lists eleven spreadsheet CAS conflicts retained for review; no chemical identity was silently overwritten. New list entries have no quantities until you enter actual stock.
+Keep the same HTML filename, location and browser profile when updating. An offline file cannot read records stored under another browser profile or file location. If those newer records are elsewhere, use Restore backup once to bring them into this app.
+
+Backups & guide has Download backup and Save complete app with my records. The second saves an offline HTML with your current records already loaded for opening on another computer. Newer records already saved in that browser still take priority.
+
+The app includes Set Active / Set Old stock, automatic registration codes, fraction bottle labels, copied editable bottle details, withdrawal logbooks, selected reports and all previous features.
+
+Registry-identity-review.csv lists eleven spreadsheet CAS conflicts kept for review. New registry entries have no assumed quantities. The local backup updater is optional for separately preparing another JSON file.
+
+This download contains the supplied laboratory records, published with the owner's permission. Future edits are stored locally in your browser and are not uploaded or synchronized to GitHub.
 
 Created by Jermaine Theus Cahayagan.

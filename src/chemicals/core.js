@@ -577,6 +577,9 @@ export function validateBackup(data) {
   }
   return structuredClone({
     schema: SCHEMA,
+    ...(typeof data.appDataVersion === "string"
+      ? { appDataVersion: data.appDataVersion }
+      : {}),
     ...(data.numberingVersion !== undefined
       ? { numberingVersion: data.numberingVersion }
       : {}),
