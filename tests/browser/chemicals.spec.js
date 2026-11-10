@@ -19,9 +19,32 @@ test.beforeEach(async ({ page }) => {
       );
   }, initialRegistry);
 });
+async function openAction(target) {
+  const menu = target.locator(
+    "xpath=ancestor::details[contains(@class,'row-more')]",
+  );
+  if ((await menu.count()) && !(await menu.evaluate((e) => e.open)))
+    await menu.locator("summary").click();
+  await target.click();
+}
+async function filterOption(page, selector, value) {
+  const menu = page.locator("#filter-options");
+  if (!(await menu.evaluate((e) => e.open)))
+    await menu.locator("summary").click();
+  await page.locator(selector).selectOption(value);
+}
+async function allFields(page) {
+  await page.locator("#form-view").selectOption("all");
+}
+async function navigate(page, section) {
+  if (await page.locator("#section-picker").isVisible())
+    await page.locator("#section-picker").selectOption(section);
+  else await page.locator(`[data-nav=${section}]`).click();
+}
 async function register(page, standard = false) {
-  if (standard) await page.locator("[data-nav=standard]").click();
+  if (standard) await navigate(page, "standard");
   await page.locator("#add-bottle").click();
+  await allFields(page);
   if (standard) await page.locator("[name=bottleId]").fill("STD-001");
   await page
     .locator("[name=name]")
@@ -72,11 +95,11 @@ test("chemicals register, withdraw, persist, filter, standardize, export and res
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/chemicals.html");
-  await page.locator("[data-nav=catalog]").click();
+  await navigate(page, "catalog");
   await expect(page.locator("#catalog-rows tr")).toHaveCount(172);
   await page.locator("#catalog-search").fill("Hydrochl");
   await expect(page.locator("#catalog-rows")).toContainText("Hydrochlric Acid");
-  await page.locator("[data-nav=raw]").click();
+  await navigate(page, "raw");
   await register(page);
   await withdrawal(page);
   await page.reload();
@@ -89,8 +112,8 @@ test("chemicals register, withdraw, persist, filter, standardize, export and res
   ).toBe(true);
   await expect(page.locator("[data-withdraw]")).toBeVisible();
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.locator("#storage-filter").selectOption("AR");
-  await page.locator("#category-filter").selectOption("Acids");
+  await filterOption(page, "#storage-filter", "AR");
+  await filterOption(page, "#category-filter", "Acids");
   await expect(
     page.locator(".inventory-table tbody tr:has([data-withdraw])"),
   ).toHaveCount(1);
@@ -133,7 +156,7 @@ test("chemicals register, withdraw, persist, filter, standardize, export and res
     if (format === "pdf") expect(data.subarray(0, 5).toString()).toBe("%PDF-");
     if (format === "docx") expect(data.subarray(0, 2).toString()).toBe("PK");
   }
-  await page.getByRole("button", { name: "Close dialog" }).click();
+  await page.getByRole("button", { name: "Back to inventory" }).click();
   await register(page, true);
   await expect(page.locator(".badge-cell")).toContainText(
     "Restandardization due",
@@ -147,13 +170,13 @@ test("chemicals register, withdraw, persist, filter, standardize, export and res
   await page.locator("[name=reason]").fill("Titration STD-09");
   await page.getByRole("button", { name: "Save record", exact: true }).click();
   await expect(page.locator(".concentration")).toHaveText("0.1002 N");
-  await page.locator("[data-nav=log]").click();
+  await navigate(page, "log");
   await page.locator("#log-action").selectOption("Withdrawal");
   await expect(page.locator(".log-table tbody tr")).toHaveCount(1);
   await expect(page.locator("#log-table")).toContainText(
     "Acidity test, batch 72",
   );
-  await page.locator("[data-nav=backup]").click();
+  await navigate(page, "backup");
   const wait = page.waitForEvent("download");
   await page.locator("#backup-download").click();
   const backup = await bytes(await wait);
@@ -220,11 +243,11 @@ test("failed storage write cannot reduce stock or append a withdrawal", async ({
     .getByRole("button", { name: "Record withdrawal", exact: true })
     .click();
   await expect(page.locator("#dialog-error")).toContainText("Storage full");
-  await page.getByRole("button", { name: "Close dialog" }).click();
+  await page.getByRole("button", { name: "Back to inventory" }).click();
   await expect(page.locator(".stock-amount")).toContainText("500");
   await page.reload();
   await expect(page.locator(".stock-amount")).toContainText("500");
-  await page.locator("[data-nav=log]").click();
+  await navigate(page, "log");
   await expect(page.locator(".log-table")).not.toContainText("Withdrawal");
   await expect(page.locator(".log-table")).toContainText("Registered");
 });
@@ -258,7 +281,7 @@ test("locator stocks are the default raw list and accept quantities without reen
   await page.locator("[data-detail]").first().click();
   await expect(page.locator(".detail-grid")).toContainText("7647-01-0");
   await expect(page.locator(".detail-grid")).toContainText("AR");
-  await page.getByRole("button", { name: "Close dialog" }).click();
+  await page.getByRole("button", { name: "Back to inventory" }).click();
   await page.locator("[data-withdraw]").click();
   await page.locator("[name=amount]").fill("50");
   await page.locator("[name=analyst]").fill("JT");
@@ -349,6 +372,7 @@ test("tracing update keeps legacy data, groups old stock and records gross-only 
   await expect(page.locator(".inventory-table")).toContainText("Old stock");
   await page.locator("[data-detail]").first().click();
   await page.locator("#detail-edit").click();
+  await allFields(page);
   await page.locator("[name=phase]").selectOption("Solid");
   await expect(page.locator("[name=density]")).not.toBeVisible();
   await expect(page.locator("[name=densityTemp]")).not.toBeVisible();
@@ -453,7 +477,7 @@ test("registry create/edit, category exports and disposal archive keep records a
       : r.abort(),
   );
   await page.goto("http://registry-offline.test/");
-  await page.locator("[data-nav=catalog]").click();
+  await navigate(page, "catalog");
   await page.locator("#new-chemical").click();
   await page.locator("[name=name]").fill("Registry test acid");
   await page.locator("[name=formula]").fill("C2H4O2");
@@ -467,7 +491,7 @@ test("registry create/edit, category exports and disposal archive keep records a
     .getByRole("button", { name: "Save chemical", exact: true })
     .click();
   await expect(page.locator("#catalog-rows tr")).toHaveCount(173);
-  await page.locator("[data-nav=raw]").click();
+  await navigate(page, "raw");
   await page.locator("#search-chem").fill("Registry test acid");
   await page
     .getByRole("button", { name: "Enter quantity", exact: true })
@@ -478,7 +502,7 @@ test("registry create/edit, category exports and disposal archive keep records a
     .getByRole("button", { name: "Save quantity", exact: true })
     .click();
   await expect(page.locator(".stock-amount")).toHaveText("500 g");
-  await page.locator("[data-nav=catalog]").click();
+  await navigate(page, "catalog");
   await page.locator("#catalog-search").fill("Registry test acid");
   await page
     .getByRole("button", { name: "Edit chemical", exact: true })
@@ -489,7 +513,7 @@ test("registry create/edit, category exports and disposal archive keep records a
   await page
     .getByRole("button", { name: "Save chemical", exact: true })
     .click();
-  await page.locator("[data-nav=raw]").click();
+  await navigate(page, "raw");
   await page.locator("#search-chem").fill("Registry acid corrected");
   await expect(page.locator(".stock-amount")).toHaveText("500 g");
   await page.locator("#search-chem").fill("");
@@ -517,9 +541,9 @@ test("registry create/edit, category exports and disposal archive keep records a
     .filter((r) => r.getCell(2).value))
     expect(String(r.getCell(col).value)).toMatch(/acid/i);
   expect(wb.worksheets.map((w) => w.name)).toEqual(["Inventory"]);
-  await page.getByRole("button", { name: "Close dialog" }).click();
+  await page.getByRole("button", { name: "Back to inventory" }).click();
   await page.locator("#search-chem").fill("Registry acid corrected");
-  await page.locator("[data-disposition]").click();
+  await openAction(page.locator("[data-disposition]"));
   await page.locator("[name=analyst]").fill("JT");
   await page.locator("[name=reason]").fill("Contamination suspected");
   await page
@@ -529,7 +553,7 @@ test("registry create/edit, category exports and disposal archive keep records a
   await expect(page.locator(".badge-cell")).toContainText(
     "Suggested for disposal",
   );
-  await page.locator("[data-disposition]").click();
+  await openAction(page.locator("[data-disposition]"));
   await expect(page.locator("[name=status]")).toHaveValue("archived");
   await page.locator("[name=analyst]").fill("JT");
   await page
@@ -542,7 +566,7 @@ test("registry create/edit, category exports and disposal archive keep records a
     .click();
   await expect(page.locator("[data-withdraw]")).toHaveCount(0);
   await expect(page.locator("[data-default-stock]")).toHaveCount(0);
-  await page.locator("[data-nav=archive]").click();
+  await navigate(page, "archive");
   await expect(page.locator(".inventory-table")).toContainText(
     "Registry acid corrected",
   );
@@ -550,8 +574,8 @@ test("registry create/edit, category exports and disposal archive keep records a
   await page.locator("[data-detail]").first().click();
   await expect(page.locator(".detail-grid")).toContainText("500 g");
   await expect(page.locator(".log-table")).toContainText("Disposed");
-  await page.getByRole("button", { name: "Close dialog" }).click();
-  await page.locator("[data-nav=backup]").click();
+  await page.getByRole("button", { name: "Back to inventory" }).click();
+  await navigate(page, "backup");
   wait = page.waitForEvent("download");
   await page.locator("#backup-download").click();
   const backup = await bytes(await wait),
@@ -576,11 +600,11 @@ test("registry create/edit, category exports and disposal archive keep records a
   await page.locator("#confirm-restore").check();
   await page.locator("#do-restore").click();
   await page.reload();
-  await page.locator("[data-nav=archive]").click();
+  await navigate(page, "archive");
   await expect(page.locator(".inventory-table")).toContainText(
     "Registry acid corrected",
   );
-  await page.locator("[data-nav=catalog]").click();
+  await navigate(page, "catalog");
   await page.locator("#catalog-search").fill("Registry acid corrected");
   await expect(page.locator("#catalog-rows tr")).toHaveCount(1);
   expect(errors).toEqual([]);
@@ -591,9 +615,7 @@ test("unmeasured default stock can be suggested for disposal and suggestion can 
 }) => {
   await page.goto("/chemicals.html");
   await page.locator("#search-chem").fill("Hydrochlric");
-  await page
-    .getByRole("button", { name: "Suggest disposal", exact: true })
-    .click();
+  await openAction(page.locator("[data-suggest-source]"));
   await expect(page.locator("[name=bottleId]")).toHaveAttribute("readonly", "");
   await page.locator("[name=analyst]").fill("JT");
   await page.locator("[name=reason]").fill("Old unidentified amount");
@@ -604,7 +626,7 @@ test("unmeasured default stock can be suggested for disposal and suggestion can 
     "Suggested for disposal",
   );
   await expect(page.locator(".stock-amount")).toContainText("Not entered");
-  await page.locator("[data-disposition]").click();
+  await openAction(page.locator("[data-disposition]"));
   await page.locator("[name=status]").selectOption("normal");
   await page.locator("[name=analyst]").fill("JT");
   await page.locator("[name=reason]").fill("Label verified for continued use");
@@ -634,6 +656,7 @@ test("offline previous-entry suggestions reuse suppliers and people without chan
     localStorage.getItem("shemberg-qa-chemicals-v1"),
   );
   await page.locator("#add-bottle").click();
+  await allFields(page);
   const suggestions = async (name) =>
     page
       .locator(`[name=${name}]`)
@@ -655,6 +678,7 @@ test("offline previous-entry suggestions reuse suppliers and people without chan
     await page.evaluate(() => localStorage.getItem("shemberg-qa-chemicals-v1")),
   ).toBe(saved);
   await page.locator("#add-bottle").click();
+  await allFields(page);
   expect(await suggestions("supplier")).not.toContain("Unsaved Supplier");
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
   await withdrawal(page);
@@ -662,13 +686,15 @@ test("offline previous-entry suggestions reuse suppliers and people without chan
   expect(await suggestions("reason")).toContain("Acidity test, batch 72");
   await expect(page.locator("[name=reason]")).toHaveValue("");
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
-  await page.locator("[data-nav=standard]").click();
+  await navigate(page, "standard");
   await page.locator("#add-bottle").click();
+  await allFields(page);
   expect(await suggestions("supplier")).toContain("Lab supplier");
   expect(await suggestions("analyst")).toContain("QA analyst");
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
   await page.reload();
   await page.locator("#add-bottle").click();
+  await allFields(page);
   expect(await suggestions("supplier")).toContain("Lab supplier");
   await expect(page.locator("[name=bottleId]")).toHaveAttribute("readonly", "");
   await page.locator("[name=name]").fill("New custom chemical");
@@ -680,6 +706,7 @@ test("offline previous-entry suggestions reuse suppliers and people without chan
     .getByRole("button", { name: "Register bottle", exact: true })
     .click();
   await page.locator("#add-bottle").click();
+  await allFields(page);
   expect(await suggestions("supplier")).toEqual(
     expect.arrayContaining(["Another supplier", "Lab supplier"]),
   );
@@ -728,7 +755,7 @@ test("live import numbering, readable selected reports, bottle overview and reve
   const before = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("shemberg-qa-chemicals-v1")),
   );
-  await page.locator("[data-nav=catalog]").click();
+  await navigate(page, "catalog");
   await page.locator("#import-registry").click();
   await expect(page.locator("#next-code")).toHaveText("Next code: QA-00991");
   await page.locator("#registry-import-file").setInputFiles({
@@ -752,7 +779,7 @@ test("live import numbering, readable selected reports, bottle overview and reve
   await page.locator('[data-import-row="0"]').uncheck();
   await page.locator("#apply-registry-import").click();
   await page.reload();
-  await page.locator("[data-nav=catalog]").click();
+  await navigate(page, "catalog");
   await page.locator("#catalog-search").fill("Import test base");
   await expect(page.locator("#catalog-rows")).toContainText("QA-00992");
   const workbook = new ExcelJS.Workbook();
@@ -779,7 +806,8 @@ test("live import numbering, readable selected reports, bottle overview and reve
   const existing = page
     .locator("#catalog-rows tr")
     .filter({ hasText: "QA-00990" });
-  await existing.locator("[data-register]").click();
+  await openAction(existing.locator("[data-register]"));
+  await allFields(page);
   const secondId = await page.locator("[name=bottleId]").inputValue();
   await page.locator("[name=unit]").selectOption("g");
   await page.locator("[name=method]").selectOption("mass");
@@ -795,7 +823,7 @@ test("live import numbering, readable selected reports, bottle overview and reve
       JSON.parse(localStorage.getItem("shemberg-qa-chemicals-v1")).bottles[0]
         .bottleId,
   );
-  await page.locator("[data-nav=raw]").click();
+  await navigate(page, "raw");
   await page.locator("#search-chem").fill("LOT-2026");
   await page.locator("[data-layout=overview]").click();
   const overview = page.locator(".overview-table tbody tr");
@@ -805,7 +833,7 @@ test("live import numbering, readable selected reports, bottle overview and reve
   await overview.locator("[data-overview]").click();
   await expect(page.locator("#modal")).toContainText(firstId);
   await expect(page.locator("#modal")).toContainText(secondId);
-  await page.getByRole("button", { name: "Close dialog" }).click();
+  await page.getByRole("button", { name: "Back to inventory" }).click();
   await page.locator("#export-open").click();
   await page
     .locator("summary")
@@ -847,12 +875,12 @@ test("live import numbering, readable selected reports, bottle overview and reve
     await page.locator(`[data-format=${format}]`).click();
     expect((await bytes(await wait)).length).toBeGreaterThan(500);
   }
-  await page.getByRole("button", { name: "Close dialog" }).click();
+  await page.getByRole("button", { name: "Back to inventory" }).click();
   await page.locator("[data-layout=bottles]").click();
   const row = page
     .locator(".inventory-table tbody tr")
     .filter({ hasText: secondId });
-  await row.locator("[data-remove]").click();
+  await openAction(row.locator("[data-remove]"));
   await page.locator("[name=analyst]").fill("JT");
   await page.locator("[name=reason]").fill("Redundant bottle entry");
   await page.locator("[name=confirm]").check();
@@ -861,16 +889,16 @@ test("live import numbering, readable selected reports, bottle overview and reve
     .getByRole("button", { name: "Delete record", exact: true })
     .click();
   await expect(page.locator(".inventory-table")).not.toContainText(secondId);
-  await page.locator("[data-nav=removed]").click();
+  await navigate(page, "removed");
   await expect(page.locator("h1")).toHaveText("Removed bottle records");
   await expect(page.locator(".inventory-table")).toContainText(secondId);
-  await page.locator("[data-restore=true]").click();
+  await openAction(page.locator("[data-restore=true]"));
   await page.locator("[name=analyst]").fill("JT");
   await page.locator("[name=reason]").fill("Restore verified bottle");
   await page
     .getByRole("button", { name: "Restore record", exact: true })
     .click();
-  await page.locator("[data-nav=raw]").click();
+  await navigate(page, "raw");
   await page.locator("#search-chem").fill(secondId);
   await expect(page.locator(".stock-amount")).toHaveText("250 g");
   const current = await page.evaluate(() =>
@@ -893,6 +921,7 @@ test("legacy bottle gets a two-year review flag without being marked expired", a
   await register(page);
   await page.locator("[data-detail]").first().click();
   await page.locator("#detail-edit").click();
+  await allFields(page);
   await page.locator("[name=received]").fill("2020-01-01");
   await page
     .locator("#bottle-form summary")
@@ -903,16 +932,16 @@ test("legacy bottle gets a two-year review flag without being marked expired", a
   await page
     .getByRole("button", { name: "Save correction", exact: true })
     .click();
-  await page.locator("#status-filter").selectOption("shelf");
+  await filterOption(page, "#status-filter", "shelf");
   await expect(page.locator(".badge-cell")).toContainText(
     "Shelf-life review due",
   );
   await expect(page.locator(".badge-cell")).not.toContainText("Expired");
   await page.locator("[data-detail]").first().click();
   await expect(page.locator(".detail-grid")).toContainText("2022-01-01");
-  await page.getByRole("button", { name: "Close dialog" }).click();
+  await page.getByRole("button", { name: "Back to inventory" }).click();
   await page.reload();
-  await page.locator("#status-filter").selectOption("shelf");
+  await filterOption(page, "#status-filter", "shelf");
   await expect(page.locator("[data-withdraw]")).toHaveCount(1);
 });
 
@@ -991,7 +1020,7 @@ test("backup updater preserves old records; group buttons and copied bottles use
     updated.registry.filter((c) => c.id.startsWith("inventory-2026-11")),
   ).toHaveLength(33); // Iron(II) chloride is already present in this synthetic baseline.
   await page.goto("http://numbering-update.test/app");
-  await page.locator("[data-nav=backup]").click();
+  await navigate(page, "backup");
   await page.locator("#restore-file").setInputFiles({
     name: "updated.json",
     mimeType: "application/json",
@@ -999,15 +1028,14 @@ test("backup updater preserves old records; group buttons and copied bottles use
   });
   await page.locator("#confirm-restore").check();
   await page.locator("#do-restore").click();
-  await page.locator("[data-nav=raw]").click();
+  await navigate(page, "raw");
   await page.locator("#search-chem").fill("Thymolphthalein");
   await expect(page.locator(".inventory-table")).toContainText(
     "OLD STOCK CHEM-077",
   );
-  await page
-    .locator("[data-stock-change][data-target-group=active]")
-    .first()
-    .click();
+  await openAction(
+    page.locator("[data-stock-change][data-target-group=active]").first(),
+  );
   await page.locator("[name=analyst]").fill("QA2");
   await page.locator("[name=reason]").fill("Verified as active");
   await page.locator("#group-form button[type=submit]").click();
@@ -1016,7 +1044,8 @@ test("backup updater preserves old records; group buttons and copied bottles use
   );
   expect(saved.bottles.every((b) => b.internalCode === "CHEM-077")).toBe(true);
   expect(saved.bottles.map((b) => b.balance)).toEqual([100, 200]);
-  await page.locator("[data-register]").first().click();
+  await openAction(page.locator("[data-register]").first());
+  await allFields(page);
   await expect(page.locator("[name=bottleId]")).toHaveValue("3/3 RAW-077");
   await expect(page.locator("[name=bottleId]")).toHaveAttribute("readonly", "");
   await expect(page.locator("[name=supplier]")).toHaveValue("Example supplier");
@@ -1042,10 +1071,9 @@ test("backup updater preserves old records; group buttons and copied bottles use
   expect(saved.bottles[0].supplier).toBe("Example supplier");
   expect(new Set(saved.bottles.map((b) => b.containerCode)).size).toBe(3);
   expect(saved.events.slice(0, 2)).toEqual(original.events);
-  await page
-    .locator("[data-stock-change][data-target-group=old]")
-    .first()
-    .click();
+  await openAction(
+    page.locator("[data-stock-change][data-target-group=old]").first(),
+  );
   await page.locator("[name=analyst]").fill("QA2");
   await page.locator("[name=reason]").fill("Return to old stock");
   await page.locator("#group-form button[type=submit]").click();

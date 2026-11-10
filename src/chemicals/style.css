@@ -2,8 +2,8 @@
   font-family: Arial, Helvetica, sans-serif;
   color: #202820;
   background: #fff;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 100%;
+  line-height: 1.6;
   font-synthesis: none;
 }
 * {
@@ -42,16 +42,16 @@ p {
   margin: 0;
 }
 h1 {
-  font-size: 27px;
+  font-size: 1.688rem;
   font-weight: 600;
   line-height: 1.3;
 }
 h2 {
-  font-size: 19px;
+  font-size: 1.188rem;
   font-weight: 600;
 }
 h3 {
-  font-size: 16px;
+  font-size: 1.143rem;
   font-weight: 600;
 }
 .sidebar {
@@ -69,7 +69,7 @@ h3 {
   object-fit: contain;
 }
 .lab-name {
-  font-size: 14px;
+  font-size: 1rem;
   margin: 15px 4px 30px;
   font-weight: 600;
 }
@@ -96,7 +96,7 @@ nav button:hover {
 }
 .sidebar-bottom {
   margin-top: auto;
-  font-size: 12px;
+  font-size: 0.9375rem;
   color: #626b62;
   padding-top: 25px;
 }
@@ -135,7 +135,7 @@ main {
   border: 1px solid #929b91;
   border-radius: 3px;
   padding: 8px 14px;
-  font-size: 13px;
+  font-size: 0.9375rem;
   color: #243a28;
   font-weight: 500;
   white-space: nowrap;
@@ -159,17 +159,17 @@ main {
   border: 0;
   padding: 5px 2px;
   color: #235c37;
-  font-size: 13px;
+  font-size: 0.9375rem;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 .inventory-summary {
-  font-size: 14px;
+  font-size: 1rem;
   margin-bottom: 6px;
   color: #414a41;
 }
 .stock-help {
-  font-size: 13px;
+  font-size: 0.9375rem;
   color: #626b62;
   margin-bottom: 25px;
 }
@@ -194,7 +194,7 @@ main {
   border-radius: 3px;
   padding: 8px 10px;
   background: #fff;
-  font-size: 13px;
+  font-size: 0.9375rem;
   color: #303b2f;
   min-width: 0;
 }
@@ -210,7 +210,7 @@ table {
   border-collapse: collapse;
   width: 100%;
   text-align: left;
-  font-size: 13px;
+  font-size: 0.9375rem;
 }
 th {
   background: #f1f3ef;
@@ -233,32 +233,32 @@ tbody tr:hover {
   padding: 0;
   text-align: left;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 1rem;
   color: #205737;
 }
 .chemical-name:hover {
   text-decoration: underline;
 }
 .subline {
-  font-size: 12px;
+  font-size: 0.9375rem;
   color: #626b62;
   margin-top: 4px;
   line-height: 1.6;
 }
 .concentration {
-  font-size: 13px;
+  font-size: 0.9375rem;
   margin-top: 3px;
 }
 .type-label {
-  font-size: 12px;
+  font-size: 0.9375rem;
   color: #626b62;
 }
 .bottle-tag {
   font-family: inherit;
-  font-size: 13px;
+  font-size: 0.9375rem;
 }
 .stock-amount {
-  font-size: 15px;
+  font-size: 1.071rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -267,7 +267,7 @@ tbody tr:hover {
 }
 .badge {
   display: block;
-  font-size: 12px;
+  font-size: 0.9375rem;
   margin-bottom: 4px;
 }
 .badge.warn {
@@ -279,7 +279,7 @@ tbody tr:hover {
   color: #626b62;
 }
 .badge-cell {
-  font-size: 12px;
+  font-size: 0.9375rem;
 }
 .row-actions {
   display: flex;
@@ -289,7 +289,7 @@ tbody tr:hover {
   min-width: 120px;
 }
 .row-actions .text-button {
-  font-size: 12px;
+  font-size: 0.9375rem;
 }
 .level {
   max-width: 170px;
@@ -309,18 +309,18 @@ tbody tr:hover {
 .level small,
 .observation {
   display: block;
-  font-size: 11px;
+  font-size: 0.9375rem;
   color: #626b62;
   margin-top: 5px;
 }
 .table-footer {
-  font-size: 12px;
+  font-size: 0.9375rem;
   color: #626b62;
   margin-top: 15px;
 }
 .page-footer {
   margin-top: 45px;
-  font-size: 12px;
+  font-size: 0.9375rem;
   color: #626b62;
 }
 .empty {
@@ -333,7 +333,7 @@ tbody tr:hover {
 .notice {
   background: #f1f3ef;
   padding: 12px 15px;
-  font-size: 13px;
+  font-size: 0.9375rem;
   margin: 15px 0 22px;
 }
 .notice > span {
@@ -344,7 +344,7 @@ tbody tr:hover {
   color: #8b3e1d;
 }
 .quiet {
-  font-size: 12px;
+  font-size: 0.9375rem;
   color: #626b62;
 }
 .panel-header {
@@ -355,7 +355,7 @@ tbody tr:hover {
   margin-bottom: 18px;
 }
 .panel-header h2 span {
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 400;
   margin-left: 8px;
 }
@@ -384,7 +384,7 @@ tbody tr:hover {
   max-width: 750px;
 }
 .visual-guide {
-  font-size: 14px;
+  font-size: 1rem;
   margin: 18px 0;
   color: #414a41;
 }
@@ -412,11 +412,11 @@ dialog::backdrop {
   z-index: 2;
 }
 .dialog-heading h2 {
-  font-size: 23px;
+  font-size: 1.438rem;
   font-weight: 600;
 }
 .close-button {
-  font-size: 27px;
+  font-size: 1.688rem;
   background: transparent;
   border: 0;
   padding: 0 4px;
@@ -439,7 +439,7 @@ dialog::backdrop {
   gap: 6px;
   min-width: 0;
   margin-bottom: 18px;
-  font-size: 13px;
+  font-size: 0.9375rem;
 }
 .field > span {
   font-weight: 600;
@@ -455,11 +455,11 @@ dialog::backdrop {
   border-radius: 3px;
   background: #fff;
   min-width: 0;
-  font-size: 14px;
+  font-size: 1rem;
   color: #202820;
 }
 .field small {
-  font-size: 12px;
+  font-size: 0.9375rem;
   color: #626b62;
 }
 .quantity-chemical {
@@ -483,7 +483,7 @@ dialog::backdrop {
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
-  font-size: 13px;
+  font-size: 0.9375rem;
 }
 .form-details[open] summary {
   margin-bottom: 18px;
@@ -504,7 +504,7 @@ dialog::backdrop {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  font-size: 14px;
+  font-size: 1rem;
 }
 .detail-top {
   display: flex;
@@ -513,7 +513,7 @@ dialog::backdrop {
   margin-bottom: 22px;
 }
 .detail-balance {
-  font-size: 24px;
+  font-size: 1.5rem;
   margin-top: 10px;
 }
 .detail-grid {
@@ -523,12 +523,12 @@ dialog::backdrop {
   margin: 30px 0;
 }
 dt {
-  font-size: 12px;
+  font-size: 0.9375rem;
   color: #626b62;
 }
 dd {
   margin: 4px 0 0;
-  font-size: 13px;
+  font-size: 0.9375rem;
   overflow-wrap: anywhere;
 }
 .log-table {
@@ -557,11 +557,11 @@ dd {
 }
 .export-option strong {
   display: block;
-  font-size: 15px;
+  font-size: 1.071rem;
 }
 .export-option small {
   display: block;
-  font-size: 12px;
+  font-size: 0.9375rem;
   color: #626b62;
   margin-top: 5px;
 }
@@ -580,7 +580,7 @@ dd {
   opacity: 0;
   pointer-events: none;
   z-index: 10;
-  font-size: 13px;
+  font-size: 0.9375rem;
   border-radius: 3px;
 }
 .toast.show {
@@ -629,7 +629,7 @@ dd {
   }
   .lab-name {
     margin: 5px 0 15px;
-    font-size: 13px;
+    font-size: 0.9375rem;
   }
   nav {
     display: flex;
@@ -637,12 +637,12 @@ dd {
     gap: 3px;
   }
   nav button {
-    font-size: 12px;
+    font-size: 0.9375rem;
     padding: 7px 8px;
   }
   .sidebar-bottom {
     padding-top: 16px;
-    font-size: 11px;
+    font-size: 0.9375rem;
   }
   .sidebar-bottom .tool-credit {
     margin-bottom: 4px;
@@ -662,7 +662,7 @@ dd {
     gap: 16px;
   }
   h1 {
-    font-size: 25px;
+    font-size: 1.562rem;
   }
   .filters {
     gap: 8px;
@@ -708,7 +708,7 @@ dd {
     grid-column: 1/-1;
   }
   .inventory-table .chemical-name {
-    font-size: 15px;
+    font-size: 1.071rem;
   }
   .inventory-table .row-actions {
     min-width: 0;
@@ -730,7 +730,7 @@ dd {
     padding: 0 20px 20px;
   }
   .dialog-heading h2 {
-    font-size: 21px;
+    font-size: 1.312rem;
   }
   .detail-grid {
     grid-template-columns: 1fr 1fr;
@@ -743,7 +743,7 @@ dd {
     flex-direction: column;
   }
   .page-footer {
-    font-size: 11px;
+    font-size: 0.9375rem;
   }
 }
 @media print {
@@ -796,7 +796,7 @@ dd {
 .report-row {
   display: block;
   margin: 8px 0;
-  font-size: 13px;
+  font-size: 0.9375rem;
 }
 .report-columns {
   display: grid;
@@ -805,7 +805,7 @@ dd {
   margin-top: 15px;
 }
 .report-columns label {
-  font-size: 13px;
+  font-size: 0.9375rem;
 }
 #report-rows {
   max-height: 300px;
@@ -822,5 +822,380 @@ dd {
 @media (max-width: 760px) {
   .report-columns {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Comfortable controls and browser-relative type keep zoom and larger system fonts usable. */
+button,
+select,
+summary,
+.field input {
+  min-height: 3rem;
+}
+button,
+summary {
+  min-width: 3rem;
+}
+button,
+.button,
+.text-button {
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  white-space: normal;
+}
+input,
+select {
+  font-size: 1rem;
+}
+input[type="checkbox"] {
+  width: 1.4rem;
+  height: 1.4rem;
+  flex-shrink: 0;
+  accent-color: #235c37;
+}
+.check,
+.report-options label,
+.report-row,
+.report-columns label {
+  min-height: 3rem;
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+:focus-visible {
+  outline: 3px solid #235c37;
+  outline-offset: 3px;
+}
+.sidebar {
+  width: 16rem;
+  padding: 1.25rem 1rem;
+}
+main {
+  margin-left: 16rem;
+}
+nav {
+  gap: 0.4rem;
+}
+nav button {
+  padding: 0.7rem 0.8rem;
+}
+.brand img {
+  max-width: 100%;
+}
+.sidebar-bottom {
+  font-size: 0.875rem;
+}
+.text-size-control {
+  display: grid;
+  gap: 0.4rem;
+  margin: 1.2rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.text-size-control select {
+  width: 100%;
+  background: white;
+  color: #202820;
+  padding: 0.5rem;
+  border: 1px solid #65725f;
+}
+.app-version {
+  margin-top: 0.5rem;
+  overflow-wrap: anywhere;
+}
+.page {
+  padding: 1.8rem 1.5rem;
+}
+.stock-help,
+.subline,
+.quiet,
+.type-label,
+.table-footer,
+.field small,
+dt,
+.level small,
+.observation {
+  color: #465146;
+}
+.badge.warn {
+  color: #823813;
+}
+.search {
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.search > span {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.search input,
+.filters select {
+  font-size: 1rem;
+  min-height: 3rem;
+}
+.filter-options {
+  margin: 0.5rem 0 1.3rem;
+}
+.filter-options summary,
+.row-more summary {
+  color: #205737;
+  cursor: pointer;
+  padding: 0.65rem 0.25rem;
+}
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 1rem;
+  padding: 0.7rem 0;
+}
+.filter-grid label {
+  display: grid;
+  gap: 0.4rem;
+  text-transform: none;
+}
+.filter-grid select {
+  width: 100%;
+  font: inherit;
+  padding: 0.5rem;
+  background: white;
+  color: #202820;
+  border: 1px solid #65725f;
+}
+.row-actions {
+  align-items: stretch;
+  gap: 0.5rem;
+  min-width: 9rem;
+}
+.row-actions > button {
+  flex: 1 1 auto;
+}
+.row-more {
+  width: 100%;
+}
+.row-more[open] {
+  padding-bottom: 0.5rem;
+}
+.row-more > button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-top: 0.3rem;
+}
+.row-actions .text-button {
+  font-size: 1rem;
+}
+.chemical-name {
+  font-size: 1rem;
+  padding: 0.25rem 0;
+}
+.stock-amount {
+  font-size: 1.2rem;
+}
+th {
+  white-space: normal;
+}
+td {
+  padding: 1rem 0.75rem;
+}
+.form-details summary {
+  display: list-item;
+  padding: 0.65rem 0.25rem;
+  font-size: 1rem;
+}
+.form-view {
+  margin: 0.4rem 0 1.3rem;
+}
+.form-view label {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+.form-view select {
+  font: inherit;
+  padding: 0.5rem;
+  background: white;
+  border: 1px solid #65725f;
+  color: #202820;
+}
+.form-progress {
+  margin-top: 0.6rem;
+  color: #465146;
+}
+.form-step h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  scroll-margin-top: 6rem;
+}
+.form-grid > .form-details {
+  grid-column: 1 / -1;
+}
+.dialog-actions {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 0.8rem 0;
+  flex-wrap: wrap;
+}
+.dialog-heading {
+  padding: 1rem 1.25rem;
+  align-items: start;
+}
+.back-button {
+  flex-shrink: 0;
+  max-width: 11rem;
+}
+.report-options label,
+.report-row,
+.report-columns label {
+  font-size: 1rem;
+}
+.export-option strong {
+  font-size: 1.1rem;
+}
+.export-option small {
+  font-size: 0.9375rem;
+}
+@media (max-width: 70rem) {
+  .sidebar {
+    position: relative;
+    width: 100%;
+  }
+  main {
+    margin-left: 0;
+  }
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  nav button {
+    flex: 1 1 10rem;
+  }
+  .brand img {
+    width: 10rem;
+    height: auto;
+  }
+  .lab-name {
+    margin: 0.5rem 0 1rem;
+  }
+  .text-size-control {
+    max-width: 18rem;
+  }
+  .sidebar-bottom {
+    padding-top: 0.5rem;
+  }
+}
+@media (max-width: 48rem) {
+  .page {
+    padding: 1.25rem 1rem;
+  }
+  .form-grid,
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .dialog-heading {
+    flex-direction: column-reverse;
+    gap: 0.7rem;
+  }
+  .dialog-body {
+    padding: 0 1rem 1rem;
+  }
+  .dialog-heading h2 {
+    font-size: 1.4rem;
+  }
+  .back-button {
+    max-width: none;
+  }
+  .dialog-actions .button {
+    flex: 1 1 auto;
+  }
+  .inventory-table .chemical-name {
+    font-size: 1rem;
+  }
+  .filters .search {
+    min-width: 0;
+  }
+  .heading-actions {
+    width: 100%;
+  }
+  .heading-actions .button {
+    flex: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
+@media print {
+  main {
+    margin: 0;
+  }
+  .filter-options,
+  .form-view {
+    display: none;
+  }
+}
+
+.stock-amount {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.inventory-table td {
+  overflow-wrap: anywhere;
+}
+.compact-navigation {
+  display: none;
+}
+.settings-menu > summary {
+  display: none;
+}
+.inventory-table {
+  table-layout: fixed;
+}
+.inventory-table th:nth-child(1) {
+  width: 32%;
+}
+.inventory-table th:nth-child(2) {
+  width: 18%;
+}
+.inventory-table th:nth-child(3) {
+  width: 17%;
+}
+.inventory-table th:nth-child(4) {
+  width: 18%;
+}
+.inventory-table th:nth-child(5) {
+  width: 15%;
+}
+.row-actions {
+  min-width: 0;
+}
+@media (max-width: 70rem) {
+  .sidebar nav {
+    display: none;
+  }
+  .compact-navigation {
+    display: grid;
+    gap: 0.4rem;
+    font-size: 1rem;
+    margin: 0.5rem 0;
+  }
+  .compact-navigation select {
+    width: 100%;
+    padding: 0.5rem;
+    font: inherit;
+    color: #202820;
+    background: white;
+    border: 1px solid #65725f;
+  }
+  .settings-menu > summary {
+    display: list-item;
+    padding: 0.65rem 0.25rem;
+    cursor: pointer;
+    color: #205737;
   }
 }

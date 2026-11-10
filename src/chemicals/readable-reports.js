@@ -15,10 +15,14 @@ import autoTable from "jspdf-autotable";
 import { download, csv } from "./reports.js";
 import { alerts } from "./core.js";
 import { chemicalOverview, shelfReview } from "./operations.js";
-const amount = (n) =>
-  n === null || n === undefined
-    ? "Not entered"
-    : new Intl.NumberFormat(undefined, { maximumFractionDigits: 3 }).format(n);
+import {
+  exactAmount as amount,
+  reportContext,
+  contextText,
+  reportBands,
+  fullDetailTable,
+  fullDetailCsv,
+} from "./report-data.js";
 export const reportFields = [
   ["internalCode", "Code", (b) => b.internalCode || ""],
   [
@@ -73,6 +77,44 @@ export const reportFields = [
     },
   ],
   ["restandardDate", "Restandardization due", (b) => b.restandardDate || ""],
+  ["unit", "Stock unit", (b) => b.unit || ""],
+  ["tare", "Empty container weight (g)", (b) => b.tare ?? "Not entered"],
+  [
+    "density",
+    "Verified density (g/mL)",
+    (b) =>
+      b.phase === "Solid" ? "Not applicable" : (b.density ?? "Not entered"),
+  ],
+  [
+    "densityTemp",
+    "Density temperature (°C)",
+    (b) =>
+      b.phase === "Solid" ? "Not applicable" : (b.densityTemp ?? "Not entered"),
+  ],
+  ["phase", "Physical state", (b) => b.phase || ""],
+  ["purity", "Purity / grade", (b) => b.purity || ""],
+  [
+    "minimum",
+    "Minimum stock",
+    (b) => (b.minimum == null ? "Not set" : amount(b.minimum) + " " + b.unit),
+  ],
+  [
+    "capacity",
+    "Full reference amount",
+    (b) => (b.capacity == null ? "Not set" : amount(b.capacity) + " " + b.unit),
+  ],
+  ["standardDate", "Standardization date", (b) => b.standardDate || ""],
+  ["analyst", "Analyst", (b) => b.analyst || ""],
+  ["visual", "Visual estimate", (b) => b.observation?.visual || ""],
+  [
+    "height",
+    "Observed liquid height",
+    (b) =>
+      b.observation?.height == null
+        ? "Not recorded"
+        : amount(b.observation.height) + " " + b.observation.heightUnit,
+  ],
+  ["observedAt", "Observation date (UTC)", (b) => b.observation?.at || ""],
   ["notes", "Notes", (b) => b.notes || ""],
   [
     "disposal",
@@ -154,18 +196,20 @@ export function readableTables(bottles, events, options = {}) {
         "Chemical / bottle",
         "Action",
         "Quantity",
+        "Balance before",
         "Balance after",
         "Recorded by",
         "Purpose / details",
       ],
       rows: events.map((e) => [
-        e.at.replace("T", " ").slice(0, 19),
+        e.at.replace("T", " ").replace("Z", " UTC"),
         e.name + " / " + e.bottleId,
         e.type,
         e.quantity === null || e.quantity === undefined
           ? "—"
           : amount(e.quantity) + " " + (e.quantityUnit || e.unit),
-        e.after === null ? "Unknown" : amount(e.after) + " " + e.unit,
+        e.before == null ? "Unknown" : amount(e.before) + " " + e.unit,
+        e.after == null ? "Unknown" : amount(e.after) + " " + e.unit,
         e.analyst,
         [
           e.reason,
@@ -197,10 +241,21 @@ export async function exportReadable(
   logo,
   options = {},
 ) {
-  const tables = readableTables(bottles, events, options),
-    stamp = new Date().toISOString(),
+  const stamp = new Date().toISOString(),
     base = "Shemberg-Chemical-Report-" + stamp.slice(0, 10);
-  const meta = `Generated ${stamp.replace("T", " ").slice(0, 19)} UTC | ${options.scope || "Inventory"} | ${options.category || "All categories"} | ${bottles.length} selected entries`;
+  const context = reportContext(options, bottles.length, stamp);
+  const meta = contextText(context);
+  if (format === "fullcsv") {
+    download(
+      new Blob(
+        [fullDetailCsv(fullDetailTable(bottles, events, options, context))],
+        { type: "text/csv;charset=utf-8" },
+      ),
+      base + "-Full-Detail.csv",
+    );
+    return;
+  }
+  const tables = readableTables(bottles, events, options);
   const note =
     "Blank or not entered means unknown. Net g and mL stay separate; gross weight is not net stock. Shelf-life flags request review, not automatic expiry.";
   if (format === "csv") {
@@ -208,7 +263,23 @@ export async function exportReadable(
       .map((t) => csv(t.headers, t.rows).replace(/^\uFEFF/, ""))
       .join("\r\n\r\n");
     download(
-      new Blob(["\ufeff" + parts], { type: "text/csv;charset=utf-8" }),
+      new Blob(
+        [
+          csv(
+            ["Report information", "Value"],
+            [
+              ["Exported at (UTC)", context.exportedAt],
+              ["App version", context.appVersion],
+              ["Scope", context.scope],
+              ["Category", context.category],
+              ["Filters", JSON.stringify(context.filters)],
+            ],
+          ) +
+            "\r\n\r\n" +
+            parts,
+        ],
+        { type: "text/csv;charset=utf-8" },
+      ),
       base + ".csv",
     );
     return;
@@ -227,9 +298,14 @@ export async function exportReadable(
       ws.mergeCells(1, 1, 1, n);
       ws.mergeCells(2, 1, 2, n);
       ws.mergeCells(3, 1, 3, n);
-      ws.getRow(1).font = { size: 16, bold: true };
-      ws.getRow(2).font = { size: 10, color: { argb: "FF555555" } };
-      ws.getRow(4).font = { bold: true, color: { argb: "FFFFFFFF" } };
+      ws.getRow(1).font = { size: 18, bold: true };
+      ws.getRow(2).font = { size: 11, color: { argb: "FF303B2F" } };
+      ws.getRow(2).height = Math.max(
+        60,
+        Math.ceil(meta.length / Math.max(20, n * 18)) * 16,
+      );
+      ws.getRow(4).font = { size: 12, bold: true, color: { argb: "FFFFFFFF" } };
+      ws.getRow(4).height = 34;
       ws.getRow(4).fill = {
         type: "pattern",
         pattern: "solid",
@@ -244,27 +320,35 @@ export async function exportReadable(
         c.width = /chemical|details|status|alerts|known balances/i.test(
           table.headers[i],
         )
-          ? 34
-          : 20;
+          ? 42
+          : 24;
         c.alignment = { vertical: "top", wrapText: true };
       });
-      ws.eachRow((r, index) => {
-        if (index >= 5)
-          r.height = Math.max(
-            30,
-            Math.min(
-              150,
-              Math.max(
-                ...r.values
-                  .slice(1)
-                  .map(
-                    (v) =>
-                      String(v ?? "").split("\n").length +
-                      Math.floor(String(v ?? "").length / 30),
-                  ),
-              ) * 15,
+      ws.eachRow((row, index) => {
+        if (index >= 5) {
+          row.font = { size: 12 };
+          row.height = Math.min(
+            409,
+            Math.max(
+              32,
+              ...row.values.slice(1).map(
+                (value) =>
+                  String(value ?? "")
+                    .split("\n")
+                    .reduce(
+                      (n, line) => n + Math.max(1, Math.ceil(line.length / 26)),
+                      0,
+                    ) * 18,
+              ),
             ),
           );
+          if (index % 2 === 1)
+            row.fill = {
+              type: "pattern",
+              pattern: "solid",
+              fgColor: { argb: "FFF1F4EF" },
+            };
+        }
       });
       ws.addRow([]);
       ws.addRow([note]);
@@ -294,13 +378,16 @@ export async function exportReadable(
     if (logo) pdf.addImage(logo, "PNG", 14, 8, 37, 15.8);
     pdf.setFontSize(16);
     pdf.text("Shemberg QA Lab Chemicals Inventory", 58, 17);
-    pdf.setFontSize(9);
-    pdf.text(meta, 14, 31);
-    pdf.setFontSize(8);
-    pdf.text(pdf.splitTextToSize(note, 265), 14, 37);
-    let y = 52;
-    for (const t of tables) {
-      if (y > 175) {
+    pdf.setFontSize(11);
+    const metaLines = pdf.splitTextToSize(pdfText(meta), 265);
+    pdf.text(metaLines, 14, 31);
+    pdf.setFontSize(10);
+    const noteY = 31 + metaLines.length * 5 + 3;
+    const noteLines = pdf.splitTextToSize(note, 265);
+    pdf.text(noteLines, 14, noteY);
+    let y = noteY + noteLines.length * 5 + 8;
+    for (const t of tables.flatMap((table) => reportBands(table))) {
+      if (y > 140) {
         pdf.addPage();
         y = 15;
       }
@@ -310,9 +397,9 @@ export async function exportReadable(
         head: [t.headers],
         body: t.rows.map((r) => r.map(pdfText)),
         startY: y + 5,
-        margin: { bottom: 16 },
+        margin: { bottom: 22 },
         styles: {
-          fontSize: t.headers.length > 9 ? 7 : 9,
+          fontSize: 11,
           font: "ReportSans",
           cellPadding: 2.5,
           overflow: "linebreak",
@@ -325,8 +412,13 @@ export async function exportReadable(
     const pages = pdf.getNumberOfPages();
     for (let p = 1; p <= pages; p++) {
       pdf.setPage(p);
-      pdf.setFontSize(8);
-      pdf.text(`Jermaine Theus Cahayagan | Page ${p} of ${pages}`, 14, 204);
+      pdf.setFontSize(9);
+      pdf.text(
+        `App ${context.appVersion} | Exported ${stamp} | Page ${p} of ${pages}`,
+        14,
+        198,
+      );
+      pdf.text("Jermaine Theus Cahayagan", 14, 204);
     }
     download(pdf.output("blob"), base + ".pdf");
     return;
@@ -334,7 +426,7 @@ export async function exportReadable(
   if (format === "docx") {
     const para = (s, bold = false) =>
       new Paragraph({
-        children: [new TextRun({ text: String(s ?? ""), bold, size: 18 })],
+        children: [new TextRun({ text: String(s ?? ""), bold, size: 24 })],
         spacing: { after: 80 },
       });
     const children = [];
@@ -360,7 +452,7 @@ export async function exportReadable(
       para(meta),
       para(note),
     );
-    for (const t of tables) {
+    for (const t of tables.flatMap((table) => reportBands(table))) {
       children.push(
         new Paragraph({ text: t.name, heading: "Heading2" }),
         new Table({
@@ -393,7 +485,7 @@ export async function exportReadable(
     );
     const doc = new Document({
       creator: "Jermaine Theus Cahayagan",
-      styles: { default: { document: { run: { font: "Arial", size: 18 } } } },
+      styles: { default: { document: { run: { font: "Arial", size: 24 } } } },
       sections: [
         {
           properties: {

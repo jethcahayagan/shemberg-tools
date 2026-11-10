@@ -12,6 +12,18 @@ Keep the same HTML filename, location and browser profile when updating. An offl
 
 Backups & guide has Download backup and Save complete app with my records. The second saves an offline HTML with your current records already loaded for opening on another computer. Newer records already saved in that browser still take priority.
 
+EASIER EVERYDAY USE
+Text size starts at Large and can be changed to Standard or Extra large. On a phone, use Open section; Text size and app details opens the size control and creator information.
+
+Withdraw, Details and Enter quantity stay visible. More actions holds adding another bottle, group changes, disposal and record removal. Filter and sort opens the labeled storage, category, alert and sort controls.
+
+Add bottle and Correct details use three guided steps: Chemical details, Container and dates, Quantity and record. Back keeps your typed values. All fields together is available in Form view.
+
+READABLE REPORTS
+Export lets you select chemicals, columns and sections. Excel and Word use larger text. Print-friendly PDF splits wide tables into labeled sections with repeated chemical/bottle identifiers, retaining every selected column. Recorded precision is retained. Export date, app version and active filters are included.
+
+Full-detail CSV exports every original field of the selected records and selected history, with exact numeric values and timestamps. Data.* cells use JSON value encoding to distinguish null, empty strings, numbers, arrays and nested history. Readable CSV is the simpler reading report. JSON backup remains the complete restoration format.
+
 The app includes Set Active / Set Old stock, automatic registration codes, fraction bottle labels, copied editable bottle details, withdrawal logbooks, selected reports and all previous features.
 
 Registry-identity-review.csv lists eleven spreadsheet CAS conflicts kept for review. New registry entries have no assumed quantities. The local backup updater is optional for separately preparing another JSON file.

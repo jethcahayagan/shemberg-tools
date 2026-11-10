@@ -10,6 +10,14 @@ Existing browser records take priority over the bundled snapshot. Startup adds m
 
 **Backups & guide → Save complete app with my records** downloads another standalone HTML containing the current workspace. It opens those records automatically in a new browser; newer records already present in a browser take priority. Save a JSON backup as well for recovery. The supplied lab snapshot is published with the owner's explicit permission; subsequent edits stay local and are not uploaded to GitHub.
 
+## Comfortable everyday use
+
+The default type size is Large. Change **Text size** to Standard or Extra large. Browser-relative font sizes respect the browser's default font and zoom; the web app does not control OS accessibility preferences. All primary buttons, text fields, dropdowns and disclosure controls have at least 48 CSS-pixel targets at Standard size, larger at increased text sizes. Checkbox labels provide a larger target. Contrast, visible keyboard focus and text labels identify actions.
+
+On smaller screens, **Open section** provides flat navigation. **Text size and app details** opens display preferences and creator details. On desktop, the navigation and text size control stay visible. **Withdraw**, **Details** and **Enter quantity** remain on the bottle rows. **More actions** holds the less frequent actions. **Filter and sort** opens explicitly labeled controls.
+
+Bottle registration and corrections have three steps: Chemical details, Container and dates, Quantity and record. Next validates the current step; Back retains entered values. The final save validates all fields and returns to any invalid field, opening its settings when needed. **Form view → All fields together** is available. No stock is saved until the final save succeeds. Measurement, withdrawal and disposal rules are unchanged.
+
 ## Update without losing records
 
 In your current HTML, choose **Backups & guide → Download backup** first. Close the old app, replace the HTML using the **same file name and location**, and open it in the **same browser profile**. The storage key and backup schema remain unchanged. Existing quantities, immutable bottle keys and historical events are retained. Numbering and list updates run automatically and save a recovery copy first. Prior labels remain searchable aliases. If a different location/profile shows the bundled snapshot rather than newer records, restore your latest JSON backup once; do not re-enter records. The supplied backup has been verified through the standalone app, including an edit, reload and portable HTML export.
@@ -103,7 +111,11 @@ Search by name, bottle, CAS, lot, supplier or concentration. Filter by storage, 
 
 ## Exports, persistence and recovery
 
-Reports export only the rows, columns and report sections you choose, with separate units and understandable quantities. PDF uses baseline digits for subscripts for font compatibility. JSON backups retain the complete workspace and history independently of report selections.
+Reading reports export only the rows, columns and report sections you choose, with exact recorded numeric precision, separate units and clear unknown values. Excel uses 12-point body text and frozen/filterable headers; Word uses 12-point body text. Print-friendly PDF uses 11-point table text. Wide Word/PDF tables split into sections of at most six columns with repeated identity columns, preserving all selected fields. PDF uses baseline digits for subscripts for font compatibility. Activity reports show balances before and after, and retain timestamp milliseconds. Export timestamp, app version, scope, category and active filters are included. These are document context, not a tamper-proof signature.
+
+**Readable CSV** contains the reading report and context. **Full-detail CSV** is a rectangular export containing all original fields for the selected records and selected history, including stable record keys, raw measurements, original timestamps, arrays and nested snapshots. It follows row/category/section selection; inventory column selection applies to reading reports. `Record_type` distinguishes bottles, unmeasured registry entries, definitions, registry history and activity. `Data.*` cells use JSON value encoding: `null`, `""`, numbers and nested arrays/objects remain distinguishable; an absent field is a blank cell. Parsing those cells with JSON restores the original values. Readable quantity/time columns sit beside those original values. This machine format has wider columns than the reading reports. JSON backups retain the complete workspace and are the restoration format.
+
+Logbook export starts with activity selected and respects the logbook search and action filters, including archived/removed bottles when their events match. Reports and display preference changes do not mutate inventory or history.
 
 Use **Backups & guide → Download backup** after each lab session. JSON preserves both inventories and all audit history, and is the only supported restoration format. Restore validates the file and explicitly confirms replacement of the entire chemicals workspace. Export a current backup first. CSV/Excel registry import is add-only metadata import, not inventory/balance restoration or a backup merge. Source files and reports cannot substitute for the JSON backup.
 

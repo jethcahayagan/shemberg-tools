@@ -1,4 +1,13 @@
 import "./style.css";
+import {
+  displayPreference,
+  applyTextSize,
+  organizeInventory,
+  guideBottleForm,
+} from "./accessibility.js";
+import { APP_VERSION } from "./version.js";
+let textSize = displayPreference();
+applyTextSize(textSize);
 import sourceCatalog from "./catalog.json";
 let catalog = sourceCatalog;
 import logo from "./logo.avif?inline";
@@ -289,7 +298,7 @@ function render() {
           `<option value="${esc(v)}" ${value === v ? "selected" : ""}>${esc(t)}</option>`,
       )
       .join("");
-  app.innerHTML = `<aside class="sidebar"><a class="brand" href="#" id="brand-home"><img src="${logo}" alt="Shemberg"></a><p class="lab-name">QA Lab Chemicals Inventory</p><nav>${[
+  app.innerHTML = `<aside class="sidebar"><a class="brand" href="#" id="brand-home"><img src="${logo}" alt="Shemberg"></a><p class="lab-name">QA Lab Chemicals Inventory</p><nav aria-label="Inventory sections">${[
     ["raw", "Raw chemicals"],
     ["standard", "Standardized stocks"],
     ["log", "Withdrawal logbook"],
@@ -304,8 +313,19 @@ function render() {
     )
     .join(
       "",
-    )}</nav><div class="sidebar-bottom"><p class="tool-credit">Shemberg QA Lab Chemicals Inventory</p><p class="creator-credit">Created by Jermaine Theus Cahayagan<br>© ${new Date().getFullYear()} Jermaine Theus Cahayagan</p><p>Offline · saved in this browser</p></div></aside>
-  <main><div class="page"><header class="page-heading"><h1>${title}</h1><div class="heading-actions">${view === "inventory" || view === "archive" || view === "removed" ? '<button class="button secondary" id="export-open">Export</button><button class="button primary" id="add-bottle">Add bottle</button>' : view === "catalog" ? '<button class="button secondary" id="repair-numbering">Fix numbering / update list</button><button class="button secondary" id="import-registry">Import list</button><button class="button primary" id="new-chemical">Add chemical</button>' : view === "log" ? '<button class="button secondary" id="export-log">Export all records</button>' : ""}</div></header>
+    )}</nav><label class="text-size-control">Text size<select id="text-size" aria-label="Text size">${[
+    ["100", "Standard"],
+    ["112.5", "Large"],
+    ["125", "Extra large"],
+  ]
+    .map(
+      ([value, label]) =>
+        `<option value="${value}" ${textSize === value ? "selected" : ""}>${label}</option>`,
+    )
+    .join(
+      "",
+    )}</select></label><div class="sidebar-bottom"><p class="tool-credit">Shemberg QA Lab Chemicals Inventory</p><p class="creator-credit">Created by Jermaine Theus Cahayagan<br>© ${new Date().getFullYear()} Jermaine Theus Cahayagan</p><p>Offline · saved in this browser</p><p class="app-version">Version ${APP_VERSION}</p></div></aside>
+  <main><div class="page"><header class="page-heading"><h1>${title}</h1><div class="heading-actions">${view === "inventory" || view === "archive" || view === "removed" ? '<button class="button secondary" id="export-open">Export</button><button class="button primary" id="add-bottle">Add bottle</button>' : view === "catalog" ? '<button class="button secondary" id="repair-numbering">Fix numbering / update list</button><button class="button secondary" id="import-registry">Import list</button><button class="button primary" id="new-chemical">Add chemical</button>' : view === "log" ? '<button class="button secondary" id="export-log">Export logbook</button>' : ""}</div></header>
   ${startupMessage ? `<p class="notice">${esc(startupMessage)} <button class="text-button" id="dismiss-startup">Dismiss</button></p>` : ""}${state.bottles.length && state.numberingVersion !== 2 ? '<p class="notice">Legacy registration labels detected. Chemical registry → Fix numbering / update list previews code corrections and preserves your records.</p>' : ""}${storageError ? `<div class="notice danger">${esc(storageError)} <button id="recover-data">Download stored data</button></div>` : ""}
   ${
     view === "inventory" || view === "archive" || view === "removed"
@@ -357,6 +377,7 @@ function render() {
           : backupView()
   }
   </div></main><dialog id="modal" aria-labelledby="modal-title"></dialog><div id="toast" class="toast" role="status"></div><input type="file" id="restore-file" accept=".json,application/json" hidden>`;
+  organizeInventory(app);
   bind();
 }
 function stockRow(b) {
@@ -420,6 +441,15 @@ function bind() {
     const e = document.getElementById(id);
     if (e) e.addEventListener(event, fn);
   };
+  on("text-size", "change", (e) => {
+    textSize = e.target.value;
+    applyTextSize(textSize);
+    try {
+      localStorage.setItem("shemberg-qa-text-size", textSize);
+    } catch {
+      toast("Text size changed for this session.");
+    }
+  });
   on("brand-home", "click", (e) => {
     e.preventDefault();
     section = "raw";
@@ -562,9 +592,22 @@ function bind() {
   on("export-open", "click", () =>
     exportDialog(selected(true, true), category),
   );
-  on("export-log", "click", () =>
-    exportDialog(stockRows(catalog, state.bottles).filter((b) => !b.deleted)),
-  );
+  on("export-log", "click", () => {
+    const action = document.querySelector("#log-action").value;
+    const events = state.events.filter(
+      (event) =>
+        (!action || event.type === action) &&
+        JSON.stringify(event).toLowerCase().includes(logQuery.toLowerCase()),
+    );
+    const keys = new Set(events.map((event) => event.bottleKey));
+    exportDialog(
+      state.bottles.filter((bottle) => keys.has(bottle.id)),
+      "",
+      "Withdrawal and activity log",
+      events,
+      { search: logQuery, action: action || "All" },
+    );
+  });
   on("backup-download", "click", () =>
     download(
       new Blob(
@@ -631,7 +674,7 @@ function bind() {
 }
 function showModal(title, body) {
   const d = document.querySelector("#modal");
-  d.innerHTML = `<div class="dialog-heading"><div><h2 id="modal-title">${esc(title)}</h2></div><button class="close-button" aria-label="Close dialog" data-close>×</button></div><div class="dialog-body">${body}<div id="dialog-error" class="form-error" role="alert"></div></div>`;
+  d.innerHTML = `<div class="dialog-heading"><div><h2 id="modal-title">${esc(title)}</h2></div><button class="button secondary back-button" data-close>Back to inventory</button></div><div class="dialog-body">${body}<div id="dialog-error" class="form-error" role="alert"></div></div>`;
   d.querySelectorAll("[data-close]").forEach(
     (e) => (e.onclick = () => d.close()),
   );
@@ -1177,6 +1220,7 @@ function bottleForm(source = null, existing = null, templateKey = null) {
     }${densityFields(b)}${field("minimum", "Minimum stock alert", b.minimum ?? "", "number", false, "In the bottle’s stock unit. Leave blank if not set.")}${field("capacity", "Full reference amount", b.capacity ?? "", "number", false, "In the stock unit. Optional; used for an estimated fill bar.")}</div></div>${editing ? "" : measurementFields(b)}${field("notes", "Notes / purity / label details", b.notes || "")}${editing ? field("reason", "Reason for correction", "", "text", true) : ""}<div class="dialog-actions"><button type="button" class="button secondary" data-close>Cancel</button><button class="button primary" type="submit">${editing ? "Save correction" : "Register bottle"}</button></div></form>`,
   );
   const form = document.querySelector("#bottle-form");
+  guideBottleForm(form);
   bindPhase(form);
   let chosen = source;
   if (chosen || generated || (editing && b.containerCode))
@@ -1433,20 +1477,27 @@ async function pngLogo() {
     img.src = logo;
   });
 }
-function exportDialog(bottles, initialCategory = "") {
+function exportDialog(
+  bottles,
+  initialCategory = "",
+  reportScope = "",
+  sourceEvents = state.events,
+  reportFilters = null,
+) {
   const selectedKeys = new Set(bottles.map((b) => b.id));
   let busy = false;
   showModal(
     "Create report",
-    `${select("exportCategory", "Chemical category", [["", "All categories"], ...["Acids", "Bases", "Oxidizers", "Salts", "Solvents", "Indicators", "Other / unclassified"].map((c) => [c, c])], initialCategory)}<p class="quiet">Current view, search, storage and stock-group filters still apply. Choose the rows, columns and sections you need. For restoration, use a JSON backup.</p><p id="export-count"></p><fieldset class="report-options"><legend>Report contents</legend><label><input type="checkbox" id="report-inventory" checked> Bottle inventory</label><label><input type="checkbox" id="report-overview"> Consolidated chemical overview (working stock)</label><label><input type="checkbox" id="report-log"> Withdrawal / activity log</label></fieldset><details class="form-details"><summary>Choose inventory columns</summary><div class="report-columns">${reportFields.map(([k, label]) => `<label><input type="checkbox" data-report-field="${k}" ${defaultReportFields.includes(k) ? "checked" : ""}>${esc(label)}</label>`).join("")}</div></details><details class="form-details"><summary>Choose chemicals and bottles</summary><button class="text-button" id="report-all">Select all shown</button> <button class="text-button" id="report-none">Clear shown</button><div id="report-rows"></div></details><div class="export-options">${[
+    `${select("exportCategory", "Chemical category", [["", "All categories"], ...["Acids", "Bases", "Oxidizers", "Salts", "Solvents", "Indicators", "Other / unclassified"].map((c) => [c, c])], initialCategory)}<p class="quiet">${view === "log" ? "Logbook search and action filters apply." : "Current view, search, storage and stock-group filters apply."} Choose the rows, columns and sections you need. JSON backups keep the complete restorable workspace.</p><p id="export-count"></p><fieldset class="report-options"><legend>Report contents</legend><label><input type="checkbox" id="report-inventory" ${view === "log" ? "" : "checked"}> Bottle inventory</label><label><input type="checkbox" id="report-overview"> Consolidated chemical overview (working stock)</label><label><input type="checkbox" id="report-log" ${view === "log" ? "checked" : ""}> Withdrawal / activity log</label></fieldset><details class="form-details"><summary>Choose inventory columns</summary><div class="report-columns">${reportFields.map(([k, label]) => `<label><input type="checkbox" data-report-field="${k}" ${defaultReportFields.includes(k) ? "checked" : ""}>${esc(label)}</label>`).join("")}</div></details><details class="form-details"><summary>Choose chemicals and bottles</summary><button class="text-button" id="report-all">Select all shown</button> <button class="text-button" id="report-none">Clear shown</button><div id="report-rows"></div></details><div class="export-options">${[
       ["xlsx", "Excel report"],
-      ["pdf", "PDF report"],
+      ["pdf", "Print-friendly PDF"],
       ["docx", "Word report"],
-      ["csv", "CSV report"],
+      ["csv", "Readable CSV"],
+      ["fullcsv", "Full-detail CSV — exact values"],
     ]
       .map(
         ([v, t]) =>
-          `<button class="export-option" data-format="${v}"><strong>${t}</strong></button>`,
+          `<button class="export-option" data-format="${v}"><strong>${t}</strong>${v === "fullcsv" ? "<small>All fields and original values for the selected sections. JSON remains the restorable backup.</small>" : ""}</button>`,
       )
       .join("")}</div>`,
   );
@@ -1458,21 +1509,32 @@ function exportDialog(bottles, initialCategory = "") {
   const selection = () => {
     const rows = shown().filter((b) => selectedKeys.has(b.id)),
       keys = new Set(rows.map((b) => b.id));
-    return { rows, events: state.events.filter((e) => keys.has(e.bottleKey)) };
+    return { rows, events: sourceEvents.filter((e) => keys.has(e.bottleKey)) };
   };
   const options = () => ({
     category: picker.value || "All categories",
     scope:
-      view === "archive"
+      reportScope ||
+      (view === "archive"
         ? "Disposal archive"
         : view === "removed"
           ? "Removed bottle records"
           : section === "raw"
             ? "Raw chemicals"
-            : "Standardized stocks",
+            : "Standardized stocks"),
     inventory: document.querySelector("#report-inventory").checked,
     overview: document.querySelector("#report-overview").checked,
     log: document.querySelector("#report-log").checked,
+    filters: reportFilters || {
+      search: query,
+      storage,
+      stockGroup: stockScope || "All",
+      alert: status || "All",
+      sort,
+    },
+    originalBottles: state.bottles,
+    registry: chemicalRegistry(sourceCatalog, state),
+    registryEvents: state.registryEvents || [],
     fields: [...document.querySelectorAll("[data-report-field]:checked")].map(
       (e) => e.dataset.reportField,
     ),
@@ -1493,7 +1555,9 @@ function exportDialog(bottles, initialCategory = "") {
             (!o.inventory &&
               (!o.overview || !chemicalOverview(rows).length) &&
               (!o.log || !events.length)) ||
-            (o.inventory && !o.fields.length)),
+            (o.inventory &&
+              !o.fields.length &&
+              b.dataset.format !== "fullcsv")),
       );
   };
   const renderRows = () => {

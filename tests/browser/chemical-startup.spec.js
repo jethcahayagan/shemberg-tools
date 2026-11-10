@@ -53,6 +53,7 @@ test("downloaded app opens the supplied records and updated list automatically, 
   await page.locator("[data-nav=raw]").click();
   await page.locator("[data-detail]").first().click();
   await page.locator("#detail-edit").click();
+  await page.locator("#form-view").selectOption("all");
   await page.locator("[name=supplier]").fill("Portable app test supplier");
   await page.locator("[name=reason]").fill("Test editable saved copy");
   await page
