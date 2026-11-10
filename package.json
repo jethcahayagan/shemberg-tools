@@ -10,7 +10,8 @@
     "test": "node --test tests/*.test.js",
     "test:e2e": "playwright test",
     "build:standalone": "node scripts/build-standalone.js",
-    "build:chemicals": "node scripts/build-chemicals.js"
+    "build:chemicals": "node scripts/build-chemicals.js && node scripts/build-backup-updater.js",
+    "package:chemicals": "npm run build:chemicals && python3 scripts/package-chemicals.py"
   },
   "dependencies": {
     "docx": "9.5.1",

@@ -13,13 +13,27 @@ Unmeasured locator stocks are included in inventory reports with blank quantitie
 
 ## Update without losing records
 
-In your current HTML, choose **Backups & guide → Download backup** first. Close the old app, replace the HTML using the **same file name and location**, and open it in the **same browser profile**. The storage key and backup schema remain unchanged. Existing quantities, bottle keys, IDs, and historical events are retained. New optional tracing fields are filled in memory; opening the new version does not rewrite stored records. If a different location/profile shows an empty inventory, restore your JSON backup; do not re-enter your records. A snapshot of your real browser data cannot be verified from the repository; the upgrade has been tested with legacy-format records and logs.
+In your current HTML, choose **Backups & guide → Download backup** first. Close the old app, replace the HTML using the **same file name and location**, and open it in the **same browser profile**. The storage key and backup schema remain unchanged. Existing quantities, immutable bottle keys and historical events are retained. Explicit numbering repair can correct display labels while retaining prior labels as aliases. New optional tracing fields are filled in memory; opening the new version does not rewrite stored records. If a different location/profile shows an empty inventory, restore your JSON backup; do not re-enter your records. A snapshot of your real browser data cannot be verified from the repository; the upgrade has been tested with legacy-format records and logs.
 
 **All chemicals / Active / Old stock** divides raw stocks without renaming bottle IDs. Existing `OLD STOCK RAW-…` names/IDs and the locator's Old stock group are recognized unless a stock group is explicitly set. Use **Details → Correct details** to change the group. Every original ID and past log entry remains unchanged.
 
 **Internal chemical code** is separate from bottle ID. Locator entries receive a stable `CHEM-<source row>` code; other bottles receive a stable code based on their record key. Codes can be edited. **Lab code**, **formula weight (g/mol)**, **date opened**, and **opened by** are available when adding a bottle or correcting details. The short Enter quantity form has them under Container, lot and stock settings. Formula weight is a manually verified label/SDS value, not calculated from the unverified locator formulas. Record both opening date and person together.
 
 Selecting **Solid** uses grams and hides density/temperature fields; mass/volume conversion is disabled for solids. Previously saved density metadata is preserved, but is not used or displayed as a solid stock requirement. Liquid density includes an optional temperature in °C; older records show the temperature as unrecorded until supplied. All tracing fields and before/after weight details are included in reports and JSON backups.
+
+## Registration numbering update and November inventory reconciliation
+
+The download ZIP includes **Shemberg-Backup-Updater.html**. Open it, choose your existing JSON backup, review the proposed corrections and download the updated JSON. The tool runs entirely on your computer; actual bottle records and logs are not embedded in the public app download. Then restore the updated JSON in the inventory app. Your original JSON file is not overwritten. Alternatively restore your backup first, then use **Chemical registry → Fix numbering / update list** to preview and apply the same corrections in the running app.
+
+For the supplied November 10 main backup, validation retained all **52 bottle records, 91 original activity events and 9 original registry-history entries**. All original record keys, balances, gross/tare measurements, lots, suppliers, dates and bottle formulas remain. Twelve existing labels/codes needed visible corrections; every bottle also gains a stable container code. Old labels/codes remain searchable aliases and existing historical events retain their original text. New audit entries explain registration changes.
+
+The code format is **OLD STOCK CHEM-066** for Old stock and **CHEM-066** for Active. Stock-group prefixes do not create separate numeric sequences. Set Active / Set Old stock changes the registry default and its non-archived bottles without changing the numeric chemical reference or quantities. Registration-generated IDs/codes are read-only; shared details remain editable. The registry code is authoritative when a manually typed bottle code conflicts. A wrong registry link is repaired only when there is one unique matching name AND CAS; conflicting scientific metadata is retained for review.
+
+Bottles of one registry chemical use **1/3 RAW-041, 2/3 RAW-041, 3/3 RAW-041** (a single bottle displays RAW-041). Fractions count non-removed, non-disposed bottles across Active and Old stock for that chemical. They update when another bottle is added, removed, restored or disposed. The stable **RAW-041-B001** container reference and immutable record key remain unchanged even when fraction totals change. Never use only the fraction as the permanent container reference. Previous labels are visible in Details and searchable, and stable container codes can be selected in reports.
+
+**Add bottle** on a bottle row copies that selected bottle's shared/lot details. Register bottle from the registry uses the latest non-archived bottle of the chemical. Supplier, lot, storage, lab code, grade, density, receipt/expiry and other reference fields are prefilled and editable. Quantity, empty-container tare, Date opened and Opened by stay blank for the new container. Review every copied lot/date before saving. Automatic code and bottle-number previews follow the selected registry entry rather than spreadsheet row numbers or arbitrary suffixes.
+
+The attached November workbook was compared to the main JSON and source catalog. **34 missing/distinct-grade definitions** are included as add-only metadata, defaulting to Active and with **no quantities or invented bottles**. Eleven same-name/CAS conflicts were held for label/SDS review rather than overwriting the main registry. Different brands/grades sharing a CAS were not silently merged. The workbook's historical quantity estimates are not used to overwrite live JSON balances. A bottle formula differing from its uniquely matched registry is flagged; the original formula remains.
 
 ## Chemical registry and list edits
 
@@ -118,7 +132,10 @@ npm run dev                    # /chemicals.html for hosted development
 npm test                       # Existing tests plus chemical accounting tests
 npm run test:e2e                # Existing workflows plus chemicals/offline tests
 npm run build                  # Both hosted applications in dist/
-npm run build:chemicals         # standalone/Shemberg-Chemicals-Inventory.html
+npm run build:chemicals         # Main offline app and local backup updater
+npm run package:chemicals       # Rebuild + verify downloadable ZIP (Python 3)
 ```
 
 Browser tests use `/usr/bin/chromium` when available or `CHROMIUM_PATH`. They start Vite on port 5180. Managed cloud Chromium restricts direct file navigation; the offline tests deliver the exact generated HTML through one intercepted document response and reject other resource requests. They verify registration, mass/volume withdrawals, reload persistence, and all three rich report downloads without external resources. The standalone app itself is intended for direct opening in normal desktop browsers. Rebuild the chemical standalone after changing its source; `build:standalone` remains the existing sample app's build command.
+
+The download ZIP is built from an explicit four-file allowlist (app HTML, updater HTML, start instructions and identity-review CSV). User JSON backups are never included by the packaging script.

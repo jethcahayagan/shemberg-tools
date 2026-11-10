@@ -157,7 +157,9 @@ export function applyRegistryImport(
       throw new Error(
         "The registry changed since preview. Reopen the import preview.",
       );
-    const prefix = basis.prefix.trim();
+    const prefix = basis.prefix
+      .trim()
+      .replace(/^(?:(?:OLD|OLS)\s*STOCK|ACTIVE)\s*[-:]?\s*/i, "");
     const currentNext = nextChemicalCode(next, base, basis);
     if (
       Number(row.code.slice(prefix.length)) <

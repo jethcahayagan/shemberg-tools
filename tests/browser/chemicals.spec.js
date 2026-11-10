@@ -533,8 +533,14 @@ test("registry create/edit, category exports and disposal archive keep records a
   await page.locator("#backup-download").click();
   const backup = await bytes(await wait),
     data = JSON.parse(backup);
-  expect(data.registry).toHaveLength(1);
-  expect(data.registryEvents).toHaveLength(2);
+  expect(
+    data.registry.filter((c) => c.name === "Registry acid corrected"),
+  ).toHaveLength(1);
+  expect(
+    data.registryEvents.filter((e) =>
+      ["Chemical added", "Chemical edited"].includes(e.type),
+    ),
+  ).toHaveLength(2);
   expect(data.bottles[0].disposal.previousBalance).toBe(500);
   await page.locator("#restore-file").setInputFiles({
     name: "backup.json",
@@ -736,7 +742,9 @@ test("live import numbering, readable selected reports, bottle overview and reve
     .locator("#catalog-rows tr")
     .filter({ hasText: "QA-00990" });
   await existing.locator("[data-register]").click();
-  await page.locator("[name=bottleId]").fill("RAW-002");
+  const secondId = await page.locator("[name=bottleId]").inputValue();
+  await page.locator("[name=unit]").selectOption("g");
+  await page.locator("[name=method]").selectOption("mass");
   await page.locator("[name=analyst]").fill("JT");
   await page.locator("[name=lot]").fill("LOT-2026");
   await page.locator("[name=amount]").fill("250");
@@ -744,6 +752,11 @@ test("live import numbering, readable selected reports, bottle overview and reve
     .locator("#modal")
     .getByRole("button", { name: "Register bottle", exact: true })
     .click();
+  const firstId = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("shemberg-qa-chemicals-v1")).bottles[0]
+        .bottleId,
+  );
   await page.locator("[data-nav=raw]").click();
   await page.locator("#search-chem").fill("LOT-2026");
   await page.locator("[data-layout=overview]").click();
@@ -752,8 +765,8 @@ test("live import numbering, readable selected reports, bottle overview and reve
   await expect(overview.locator("td").nth(1)).toHaveText("2");
   await expect(overview).toContainText("250 g; 500 mL");
   await overview.locator("[data-overview]").click();
-  await expect(page.locator("#modal")).toContainText("RAW-001");
-  await expect(page.locator("#modal")).toContainText("RAW-002");
+  await expect(page.locator("#modal")).toContainText(firstId);
+  await expect(page.locator("#modal")).toContainText(secondId);
   await page.getByRole("button", { name: "Close dialog" }).click();
   await page.locator("#export-open").click();
   await page
@@ -785,7 +798,7 @@ test("live import numbering, readable selected reports, bottle overview and reve
     "Bottle ID",
     "Quantity",
   ]);
-  expect(sheet.getRow(5).getCell(2).value).toBe("RAW-001");
+  expect(sheet.getRow(5).getCell(2).value).toBe(firstId);
   expect(sheet.getRow(5).getCell(3).value).toBe("500 mL");
   expect(report.worksheets).toHaveLength(1);
   await page.locator("#report-inventory").uncheck();
@@ -800,7 +813,7 @@ test("live import numbering, readable selected reports, bottle overview and reve
   await page.locator("[data-layout=bottles]").click();
   const row = page
     .locator(".inventory-table tbody tr")
-    .filter({ hasText: "RAW-002" });
+    .filter({ hasText: secondId });
   await row.locator("[data-remove]").click();
   await page.locator("[name=analyst]").fill("JT");
   await page.locator("[name=reason]").fill("Redundant bottle entry");
@@ -809,10 +822,10 @@ test("live import numbering, readable selected reports, bottle overview and reve
     .locator("#modal")
     .getByRole("button", { name: "Delete record", exact: true })
     .click();
-  await expect(page.locator(".inventory-table")).not.toContainText("RAW-002");
+  await expect(page.locator(".inventory-table")).not.toContainText(secondId);
   await page.locator("[data-nav=removed]").click();
   await expect(page.locator("h1")).toHaveText("Removed bottle records");
-  await expect(page.locator(".inventory-table")).toContainText("RAW-002");
+  await expect(page.locator(".inventory-table")).toContainText(secondId);
   await page.locator("[data-restore=true]").click();
   await page.locator("[name=analyst]").fill("JT");
   await page.locator("[name=reason]").fill("Restore verified bottle");
@@ -820,17 +833,18 @@ test("live import numbering, readable selected reports, bottle overview and reve
     .getByRole("button", { name: "Restore record", exact: true })
     .click();
   await page.locator("[data-nav=raw]").click();
-  await page.locator("#search-chem").fill("RAW-002");
+  await page.locator("#search-chem").fill(secondId);
   await expect(page.locator(".stock-amount")).toHaveText("250 g");
   const current = await page.evaluate(() =>
     JSON.parse(localStorage.getItem("shemberg-qa-chemicals-v1")),
   );
   expect(current.bottles[0].balance).toBe(500);
   expect(current.events[0]).toEqual(before.events[0]);
-  expect(current.registry.map((c) => c.internalCode)).toEqual([
-    "QA-00992",
-    "QA-00993",
-  ]);
+  expect(
+    current.registry
+      .filter((c) => c.internalCode?.startsWith("QA-"))
+      .map((c) => c.internalCode),
+  ).toEqual(["QA-00992", "QA-00993"]);
   expect(errors).toEqual([]);
 });
 
@@ -862,4 +876,143 @@ test("legacy bottle gets a two-year review flag without being marked expired", a
   await page.reload();
   await page.locator("#status-filter").selectOption("shelf");
   await expect(page.locator("[data-withdraw]")).toHaveCount(1);
+});
+
+test("backup updater preserves old records; group buttons and copied bottles use correct fraction labels", async ({
+  page,
+}) => {
+  const { emptyState, register } = await import("../../src/chemicals/core.js");
+  let original = emptyState();
+  for (const [i, label] of [
+    [1, "1/2"],
+    [2, "2/2"],
+  ])
+    original = register(
+      original,
+      {
+        section: "raw",
+        catalogId: "locator-77",
+        sourceRow: 77,
+        name: "Thymolphthalein",
+        formula: "C₂₈H₃₀O₄",
+        cas: "125-20-2",
+        stockGroup: "old",
+        bottleId: label,
+        internalCode: "OLS STOCK CHEM-077",
+        unit: "g",
+        phase: "Solid",
+        analyst: "QA analyst",
+        supplier: "Example supplier",
+        lot: "LOT-" + i,
+        storage: "Cab A",
+        received: "2026-01-01",
+        opened: "2026-01-02",
+        openedBy: "QA analyst",
+      },
+      { method: "mass", amount: 100 * i },
+    );
+  const updater = await readFile(
+      "standalone/Shemberg-Backup-Updater.html",
+      "utf8",
+    ),
+    html = await readFile(
+      "standalone/Shemberg-Chemicals-Inventory.html",
+      "utf8",
+    ),
+    requests = [];
+  await page.route("**/*", (r) => {
+    if (r.request().isNavigationRequest())
+      return r.fulfill({
+        contentType: "text/html",
+        body: r.request().url().endsWith("/app") ? html : updater,
+      });
+    requests.push(r.request().url());
+    return r.abort();
+  });
+  await page.goto("http://numbering-update.test/");
+  await page.locator("#backup").setInputFiles({
+    name: "main-backup.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(original)),
+  });
+  await expect(page.locator("#message")).toContainText("2 bottle records kept");
+  const wait = page.waitForEvent("download");
+  await page.locator("#download").click();
+  const backup = await bytes(await wait),
+    updated = JSON.parse(backup);
+  expect(updated.bottles.map((b) => b.bottleId)).toEqual([
+    "1/2 RAW-077",
+    "2/2 RAW-077",
+  ]);
+  expect(updated.events.slice(0, 2)).toEqual(original.events);
+  expect(updated.bottles.map((b) => b.balance)).toEqual([100, 200]);
+  expect(updated.bottles.map((b) => b.id)).toEqual(
+    original.bottles.map((b) => b.id),
+  );
+  expect(
+    updated.registry.filter((c) => c.id.startsWith("inventory-2026-11")),
+  ).toHaveLength(33); // Iron(II) chloride is already present in this synthetic baseline.
+  await page.goto("http://numbering-update.test/app");
+  await page.locator("[data-nav=backup]").click();
+  await page.locator("#restore-file").setInputFiles({
+    name: "updated.json",
+    mimeType: "application/json",
+    buffer: backup,
+  });
+  await page.locator("#confirm-restore").check();
+  await page.locator("#do-restore").click();
+  await page.locator("[data-nav=raw]").click();
+  await page.locator("#search-chem").fill("Thymolphthalein");
+  await expect(page.locator(".inventory-table")).toContainText(
+    "OLD STOCK CHEM-077",
+  );
+  await page
+    .locator("[data-stock-change][data-target-group=active]")
+    .first()
+    .click();
+  await page.locator("[name=analyst]").fill("QA2");
+  await page.locator("[name=reason]").fill("Verified as active");
+  await page.locator("#group-form button[type=submit]").click();
+  let saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("shemberg-qa-chemicals-v1")),
+  );
+  expect(saved.bottles.every((b) => b.internalCode === "CHEM-077")).toBe(true);
+  expect(saved.bottles.map((b) => b.balance)).toEqual([100, 200]);
+  await page.locator("[data-register]").first().click();
+  await expect(page.locator("[name=bottleId]")).toHaveValue("3/3 RAW-077");
+  await expect(page.locator("[name=bottleId]")).toHaveAttribute("readonly", "");
+  await expect(page.locator("[name=supplier]")).toHaveValue("Example supplier");
+  await expect(page.locator("[name=lot]")).toHaveValue("LOT-1");
+  await expect(page.locator("[name=amount]")).toHaveValue("");
+  await expect(page.locator("[name=opened]")).toHaveValue("");
+  await expect(page.locator("[name=tare]")).toHaveValue("");
+  await page.locator("[name=supplier]").fill("Different supplier");
+  await page.locator("[name=lot]").fill("NEW-LOT");
+  await page.locator("[name=amount]").fill("50");
+  await page.locator("#bottle-form button[type=submit]").click();
+  await expect(page.locator("#modal")).not.toBeVisible();
+  saved = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem("shemberg-qa-chemicals-v1")),
+  );
+  expect(saved.bottles.map((b) => b.bottleId)).toEqual([
+    "1/3 RAW-077",
+    "2/3 RAW-077",
+    "3/3 RAW-077",
+  ]);
+  expect(saved.bottles.map((b) => b.balance)).toEqual([100, 200, 50]);
+  expect(saved.bottles[2].supplier).toBe("Different supplier");
+  expect(saved.bottles[0].supplier).toBe("Example supplier");
+  expect(new Set(saved.bottles.map((b) => b.containerCode)).size).toBe(3);
+  expect(saved.events.slice(0, 2)).toEqual(original.events);
+  await page
+    .locator("[data-stock-change][data-target-group=old]")
+    .first()
+    .click();
+  await page.locator("[name=analyst]").fill("QA2");
+  await page.locator("[name=reason]").fill("Return to old stock");
+  await page.locator("#group-form button[type=submit]").click();
+  await expect(page.locator(".inventory-table")).toContainText(
+    "OLD STOCK CHEM-077",
+  );
+  expect(requests).toEqual([]);
 });

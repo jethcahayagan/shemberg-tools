@@ -38,6 +38,15 @@ import {
   defaultReportFields,
 } from "./readable-reports.js";
 import { savedSuggestions } from "./suggestions.js";
+import supplement from "./inventory-supplement.json";
+import {
+  repairRegistration,
+  updateInventoryBackup,
+  nextBottleDetails,
+  bottleTemplate,
+  stockCode,
+  changeChemicalGroup,
+} from "./numbering.js";
 const KEY = "shemberg-qa-chemicals-v1";
 let state = emptyState(),
   storageError = "",
@@ -136,6 +145,9 @@ function selected(includeDefaults = false, ignoreCategory = false) {
         [
           b.name,
           b.bottleId,
+          b.containerCode,
+          (b.legacyBottleIds || []).join(" "),
+          (b.legacyInternalCodes || []).join(" "),
           b.internalCode,
           b.labCode,
           b.cas,
@@ -266,8 +278,8 @@ function render() {
     .join(
       "",
     )}</nav><div class="sidebar-bottom"><p class="tool-credit">Shemberg QA Lab Chemicals Inventory</p><p class="creator-credit">Created by Jermaine Theus Cahayagan<br>© ${new Date().getFullYear()} Jermaine Theus Cahayagan</p><p>Offline · saved in this browser</p></div></aside>
-  <main><div class="page"><header class="page-heading"><h1>${title}</h1><div class="heading-actions">${view === "inventory" || view === "archive" || view === "removed" ? '<button class="button secondary" id="export-open">Export</button><button class="button primary" id="add-bottle">Add bottle</button>' : view === "catalog" ? '<button class="button secondary" id="import-registry">Import list</button><button class="button primary" id="new-chemical">Add chemical</button>' : view === "log" ? '<button class="button secondary" id="export-log">Export all records</button>' : ""}</div></header>
-  ${storageError ? `<div class="notice danger">${esc(storageError)} <button id="recover-data">Download stored data</button></div>` : ""}
+  <main><div class="page"><header class="page-heading"><h1>${title}</h1><div class="heading-actions">${view === "inventory" || view === "archive" || view === "removed" ? '<button class="button secondary" id="export-open">Export</button><button class="button primary" id="add-bottle">Add bottle</button>' : view === "catalog" ? '<button class="button secondary" id="repair-numbering">Fix numbering / update list</button><button class="button secondary" id="import-registry">Import list</button><button class="button primary" id="new-chemical">Add chemical</button>' : view === "log" ? '<button class="button secondary" id="export-log">Export all records</button>' : ""}</div></header>
+  ${state.bottles.length && state.numberingVersion !== 2 ? '<p class="notice">Legacy registration labels detected. Chemical registry → Fix numbering / update list previews code corrections and preserves your records.</p>' : ""}${storageError ? `<div class="notice danger">${esc(storageError)} <button id="recover-data">Download stored data</button></div>` : ""}
   ${
     view === "inventory" || view === "archive" || view === "removed"
       ? `<p class="inventory-summary">${view === "archive" ? "Disposed containers · " : section === "raw" ? `${catalog.length} chemicals in registry · ` : ""}${view === "removed" ? `${rows.length} removed bottle records` : view === "archive" ? `${rows.length} archived containers` : `${bottles.length} bottles recorded · ${bottles.filter((b) => alerts(b).length).length} with alerts`}</p>
@@ -321,7 +333,7 @@ function render() {
   bind();
 }
 function stockRow(b) {
-  return `<tr ${b.isCatalog ? 'data-default-stock="' + b.id + '"' : ""}><td>${b.isCatalog ? `<strong>${esc(b.name)}</strong>` : `<button class="chemical-name" data-detail="${b.id}">${esc(b.name)}</button>`}${b.concentration ? `<div class="concentration">${esc(b.concentration)}</div>` : ""}<div class="subline">${b.bottleId ? esc(b.bottleId) + " · " : ""}${esc(b.formula || "")}${b.cas ? " · CAS " + esc(b.cas) : ""}</div><div class="subline">${esc(b.classification || "")}</div><div class="subline">${esc(b.internalCode || "")}${b.labCode ? " · Lab " + esc(b.labCode) : ""} · ${b.stockGroup === "old" ? "Old stock" : "Active"}</div></td><td>${b.isCatalog ? '<span class="quantity-missing">Not entered</span>' : `<strong class="stock-amount">${b.deleted ? "Removed" : b.disposalStatus === "archived" ? "Disposed" : num(b.balance) + " " + (b.balance !== null ? esc(b.unit) : "")}</strong>${level(b)}${b.gross !== null && b.gross !== undefined ? `<div class="subline">Last gross weight: ${num(b.gross)} g</div>` : ""}`}</td><td>${b.section === "raw" ? `${esc(b.storage || "Not recorded")}${b.lot ? '<div class="subline">Lot ' + esc(b.lot) + "</div>" : ""}` : `Due ${fmtDate(b.restandardDate)}<div class="subline">${esc(b.analyst)}</div>`}</td><td class="badge-cell">${badges(b)}${b.expiry ? `<div class="subline">Expires ${esc(b.expiry)}</div>` : ""}</td><td><div class="row-actions">${b.isCatalog ? `<button class="button small" data-quantity="${b.id}">Enter quantity</button><button class="text-button" data-suggest-source="${b.id}">Suggest disposal</button>` : `${!b.deleted && b.disposalStatus !== "archived" ? `<button class="button small" data-withdraw="${b.id}">Withdraw</button>` : ""}<button class="text-button" data-detail="${b.id}">Details</button>${b.deleted ? `<button class="text-button" data-remove="${b.id}" data-restore="true">Restore</button>` : `<button class="text-button" data-remove="${b.id}">Delete record</button>`}${!b.deleted && b.disposalStatus !== "archived" ? `<button class="text-button" data-disposition="${b.id}">Disposal</button>` : ""}${b.catalogId && !b.deleted && b.disposalStatus !== "archived" ? `<button class="text-button" data-register="${esc(b.catalogId)}">Add bottle</button>` : ""}`}</div></td></tr>`;
+  return `<tr ${b.isCatalog ? 'data-default-stock="' + b.id + '"' : ""}><td>${b.isCatalog ? `<strong>${esc(b.name)}</strong>` : `<button class="chemical-name" data-detail="${b.id}">${esc(b.name)}</button>`}${b.concentration ? `<div class="concentration">${esc(b.concentration)}</div>` : ""}<div class="subline">${b.bottleId ? esc(b.bottleId) + " · " : ""}${esc(b.formula || "")}${b.cas ? " · CAS " + esc(b.cas) : ""}</div><div class="subline">${esc(b.classification || "")}</div><div class="subline">${esc(b.internalCode || "")}${b.labCode ? " · Lab " + esc(b.labCode) : ""} · ${b.stockGroup === "old" ? "Old stock" : "Active"}</div></td><td>${b.isCatalog ? '<span class="quantity-missing">Not entered</span>' : `<strong class="stock-amount">${b.deleted ? "Removed" : b.disposalStatus === "archived" ? "Disposed" : num(b.balance) + " " + (b.balance !== null ? esc(b.unit) : "")}</strong>${level(b)}${b.gross !== null && b.gross !== undefined ? `<div class="subline">Last gross weight: ${num(b.gross)} g</div>` : ""}`}</td><td>${b.section === "raw" ? `${esc(b.storage || "Not recorded")}${b.lot ? '<div class="subline">Lot ' + esc(b.lot) + "</div>" : ""}` : `Due ${fmtDate(b.restandardDate)}<div class="subline">${esc(b.analyst)}</div>`}</td><td class="badge-cell">${badges(b)}${b.expiry ? `<div class="subline">Expires ${esc(b.expiry)}</div>` : ""}</td><td><div class="row-actions">${b.isCatalog ? `<button class="button small" data-quantity="${b.id}">Enter quantity</button><button class="text-button" data-suggest-source="${b.id}">Suggest disposal</button><button class="text-button" data-stock-change="${b.id}" data-target-group="${b.stockGroup === "old" ? "active" : "old"}">Set ${b.stockGroup === "old" ? "Active" : "Old stock"}</button>` : `${!b.deleted && b.disposalStatus !== "archived" ? `<button class="button small" data-withdraw="${b.id}">Withdraw</button>` : ""}<button class="text-button" data-detail="${b.id}">Details</button>${b.deleted ? `<button class="text-button" data-remove="${b.id}" data-restore="true">Restore</button>` : `<button class="text-button" data-remove="${b.id}">Delete record</button>`}${!b.deleted && b.disposalStatus !== "archived" ? `<button class="text-button" data-disposition="${b.id}">Disposal</button>` : ""}${!b.deleted && b.disposalStatus !== "archived" ? `<button class="text-button" data-stock-change="${esc(b.isCatalog ? b.id : b.catalogId || b.id)}" data-stock-bottle="${b.isCatalog ? "" : b.id}" data-target-group="${b.stockGroup === "old" ? "active" : "old"}">Set ${b.stockGroup === "old" ? "Active" : "Old stock"}</button>` : ""}${b.catalogId && !b.deleted && b.disposalStatus !== "archived" ? `<button class="text-button" data-register="${esc(b.catalogId)}" data-template="${b.id}">Add bottle</button>` : ""}`}</div></td></tr>`;
 }
 function catalogView() {
   return `<div class="notice"><span>ⓘ</span><div>Add chemicals here or edit an existing entry. Shared identity edits update linked bottles; bottle quantities, lots and storage stay unchanged.</div></div><section class="inventory-panel"><div class="filters"><label class="search"><span>⌕</span><input id="catalog-search" aria-label="Search locator" placeholder="Search chemicals, CAS, storage or classification"></label></div><div class="table-wrap"><table><thead><tr><th>Chemical / formula</th><th>Classification / CAS</th><th>Storage</th><th>Source hazards</th><th></th></tr></thead><tbody id="catalog-rows">${catalogRows(catalog)}</tbody></table></div></section>`;
@@ -331,7 +343,7 @@ function catalogRows(items) {
     items
       .map(
         (c) =>
-          `<tr><td><strong>${esc(c.name)}</strong><div class="subline">${esc(tracingDetails(c).internalCode)} · ${esc(c.formula || "Formula not recorded")}</div></td><td>${esc(c.classification || "Unclassified")}<div class="subline">${esc(c.cas || "CAS not recorded")}</div></td><td>${esc(c.storage || "Not recorded")}</td><td class="hazard-text">${esc(c.hazards || "Not recorded")}</td><td><button class="button small" data-register="${c.id}">Register bottle</button><button class="text-button" data-edit-chemical="${c.id}">Edit chemical</button></td></tr>`,
+          `<tr><td><strong>${esc(c.name)}</strong><div class="subline">${esc(tracingDetails(c).internalCode)} · ${esc(c.formula || "Formula not recorded")}</div></td><td>${esc(c.classification || "Unclassified")}<div class="subline">${esc(c.cas || "CAS not recorded")}</div></td><td>${esc(c.storage || "Not recorded")}</td><td class="hazard-text">${esc(c.hazards || "Not recorded")}</td><td><button class="button small" data-register="${c.id}">Register bottle</button><button class="text-button" data-edit-chemical="${c.id}">Edit chemical</button><button class="text-button" data-stock-change="${c.id}" data-target-group="${tracingDetails(c).stockGroup === "old" ? "active" : "old"}">Set ${tracingDetails(c).stockGroup === "old" ? "Active" : "Old stock"}</button></td></tr>`,
       )
       .join("") || '<tr><td colspan="5">No matching catalog entries.</td></tr>'
   );
@@ -389,6 +401,7 @@ function bind() {
     render();
   });
   on("new-chemical", "click", () => chemicalForm());
+  on("repair-numbering", "click", () => repairForm());
   on("import-registry", "click", () => registryImportForm());
   document.querySelectorAll("[data-layout]").forEach(
     (e) =>
@@ -472,7 +485,11 @@ function bind() {
       (e) =>
         (e.onclick = () => {
           section = "raw";
-          bottleForm(catalog.find((c) => c.id === e.dataset.register));
+          bottleForm(
+            catalog.find((c) => c.id === e.dataset.register),
+            null,
+            e.dataset.template,
+          );
         }),
     );
   bindRegister();
@@ -642,7 +659,7 @@ function traceFields(b = {}) {
       ["old", "Old stock"],
     ],
     details.stockGroup,
-  )}${field("internalCode", "Internal chemical code", details.internalCode === "BOTTLE-undefined" ? "" : details.internalCode, "text", false, "Kept separately from the bottle ID; blank generates a stable code.")}${field("labCode", "Lab code", details.labCode)}${field("formulaWeight", "Formula weight (g/mol)", details.formulaWeight ?? "", "number", false, "Use the verified label/SDS value, including hydration state.")}${field("opened", "Date opened", details.opened, "date")}${field("openedBy", "Opened by", details.openedBy)}${shelfFields(b)}`;
+  )}${field("internalCode", "Internal chemical code", details.internalCode === "BOTTLE-undefined" ? "" : stockCode(details.internalCode, details.stockGroup), "text", false, "Kept separately from the bottle ID; blank generates a stable code.")}${field("labCode", "Lab code", details.labCode)}${field("formulaWeight", "Formula weight (g/mol)", details.formulaWeight ?? "", "number", false, "Use the verified label/SDS value, including hydration state.")}${field("opened", "Date opened", details.opened, "date")}${field("openedBy", "Opened by", details.openedBy)}${shelfFields(b)}`;
 }
 function shelfFields(b = {}) {
   return `<details class="form-details"><summary>Shelf-life review settings</summary><p class="quiet">Manufacturer expiration takes priority. Without it, review defaults to 24 months from manufacture date, or date received when manufacture is unknown. This is a review flag, not proof of expiry.</p><div class="form-grid">${field("manufactured", "Manufacture date", b.manufactured || "", "date")}${field("shelfLifeMonths", "Unopened / age review (months)", b.shelfLifeMonths ?? 24, "number", false, "0 disables this estimate.")}${field("openedLifeMonths", "Review after opening (months)", b.openedLifeMonths ?? "", "number", false, "Optional chemical-specific period from date opened.")}</div></details>`;
@@ -677,6 +694,17 @@ function bindPhase(form) {
   update();
 }
 function bindChemicalActions() {
+  document
+    .querySelectorAll("[data-stock-change]")
+    .forEach(
+      (e) =>
+        (e.onclick = () =>
+          groupForm(
+            e.dataset.stockChange,
+            e.dataset.targetGroup,
+            e.dataset.stockBottle,
+          )),
+    );
   document
     .querySelectorAll("[data-edit-chemical]")
     .forEach((e) => (e.onclick = () => chemicalForm(e.dataset.editChemical)));
@@ -715,6 +743,15 @@ function chemicalForm(key = null) {
             .join("")}</details>`
         : ""
     }`,
+  );
+  const chemicalFormElement = document.querySelector("#chemical-form");
+  chemicalFormElement.elements.stockGroup.addEventListener(
+    "change",
+    () =>
+      (chemicalFormElement.elements.internalCode.value = stockCode(
+        chemicalFormElement.elements.internalCode.value,
+        chemicalFormElement.elements.stockGroup.value,
+      )),
   );
   document.querySelector("#chemical-form").onsubmit = (e) => {
     e.preventDefault();
@@ -780,7 +817,7 @@ function dispositionForm(key, sourceOnly = false) {
         );
         bottleKey = next.bottles.at(-1).id;
       }
-      commit(setDisposition(next, bottleKey, input));
+      commit(setDisposition(next, bottleKey, input, sourceCatalog));
       toast(
         input.status === "archived"
           ? "Disposed stock moved to archive."
@@ -817,6 +854,7 @@ function removalForm(key, restore = false) {
           key,
           Object.fromEntries(new FormData(e.target)),
           restore,
+          sourceCatalog,
         ),
       );
       toast(
@@ -907,20 +945,89 @@ function registryImportForm() {
     }
   };
 }
+function groupForm(key, target, bottleKey = null) {
+  const prepared = repairRegistration(state, sourceCatalog);
+  if (bottleKey)
+    key = prepared.bottles.find((b) => b.id === bottleKey)?.catalogId || key;
+  const c =
+    chemicalRegistry(sourceCatalog, prepared).find((c) => c.id === key) ||
+    chemicalRegistry(sourceCatalog, prepared).find(
+      (c) => c.legacyBottleKey === key,
+    );
+  if (!c) {
+    toast("Open Chemical registry to set the chemical group.", true);
+    return;
+  }
+  showModal(
+    target === "old" ? "Set chemical as Old stock" : "Set chemical as Active",
+    `<form id="group-form"><p><strong>${esc(c.name)}</strong></p><p>Update the registry default and all non-archived bottles of this chemical. The numeric chemical reference, balances and history stay intact; the OLD STOCK code prefix follows the selected group.</p><div class="form-grid">${field("analyst", "Recorded by", "", "text", true)}${field("reason", "Reason", "", "text", true)}</div><div class="dialog-actions"><button type="button" class="button secondary" data-close>Cancel</button><button type="submit" class="button primary">Set ${target === "old" ? "Old stock" : "Active"}</button></div></form>`,
+  );
+  document.querySelector("#group-form").onsubmit = (e) => {
+    e.preventDefault();
+    try {
+      commit(
+        changeChemicalGroup(
+          prepared,
+          sourceCatalog,
+          c.id,
+          target,
+          Object.fromEntries(new FormData(e.target)),
+        ),
+      );
+      toast("Chemical stock group updated.");
+    } catch (err) {
+      dialogError(err.message);
+    }
+  };
+}
+function repairForm() {
+  const preview = updateInventoryBackup(state, sourceCatalog, supplement);
+  const changed = preview.bottles.filter((b) => {
+    const old = state.bottles.find((x) => x.id === b.id);
+    return (
+      old.bottleId !== b.bottleId ||
+      old.internalCode !== b.internalCode ||
+      old.catalogId !== b.catalogId
+    );
+  });
+  const added = (preview.registry || []).filter(
+    (c) =>
+      !(state.registry || []).some((r) => r.id === c.id) &&
+      c.id.startsWith("inventory-2026-11"),
+  );
+  showModal(
+    "Fix numbering / update registry",
+    `<form id="repair-form"><p>${state.bottles.length} bottles retained · ${state.events.length} existing log entries retained · ${changed.length} labels/links corrected · ${added.length} missing registry definitions added.</p><p>No quantities, supplier/lot details, dates or past logs are replaced. Same-name CAS conflicts in the spreadsheet are kept for separate review, not used to overwrite your main backup.</p><div class="table-wrap"><table><thead><tr><th>Chemical</th><th>Previous bottle / code</th><th>Updated bottle / code</th></tr></thead><tbody>${changed
+      .map((b) => {
+        const old = state.bottles.find((x) => x.id === b.id);
+        return `<tr><td>${esc(b.name)}</td><td>${esc(old.bottleId)}<br>${esc(old.internalCode || "")}</td><td>${esc(b.bottleId)}<br>${esc(b.internalCode)}</td></tr>`;
+      })
+      .join(
+        "",
+      )}</tbody></table></div><div class="form-grid">${field("analyst", "Recorded by", "", "text", true)}${field("reason", "Reference / reason", "Registration numbering and November inventory reconciliation", "text", true)}</div><div class="dialog-actions"><button type="button" class="button secondary" data-close>Cancel</button><button type="submit" class="button primary">Apply corrections and additions</button></div></form>`,
+  );
+  document.querySelector("#repair-form").onsubmit = (e) => {
+    e.preventDefault();
+    try {
+      commit(
+        updateInventoryBackup(
+          state,
+          sourceCatalog,
+          supplement,
+          Object.fromEntries(new FormData(e.target)),
+        ),
+      );
+      toast(
+        "Numbering corrected. Download a JSON backup to save this updated copy.",
+      );
+    } catch (err) {
+      dialogError(err.message);
+    }
+  };
+}
 function quantityForm(source) {
-  let bottleId =
-    "RAW-" +
-    (source.sourceRow
-      ? String(source.sourceRow).padStart(3, "0")
-      : source.id.slice(-8));
-  const baseId = bottleId;
-  let suffix = 2;
-  while (
-    state.bottles.some(
-      (b) => b.bottleId.toLowerCase() === bottleId.toLowerCase(),
-    )
-  )
-    bottleId = baseId + "-" + suffix++;
+  const proposed = nextBottleDetails(state, source);
+  const bottleId = proposed.bottleId;
   showModal(
     "Enter quantity",
     `<form id="quantity-form"><p class="quantity-chemical"><strong>${esc(source.name)}</strong><br>${esc(source.formula)} · ${esc(source.cas)}<br>${esc(source.storage || "Storage not recorded")}</p><div class="form-grid">${select(
@@ -943,6 +1050,16 @@ function quantityForm(source) {
     )}${select("phase", "Physical state", ["Not recorded", "Solid", "Liquid", "Other"], "Not recorded")}${field("amount", "Quantity", "", "number", true)}${field("analyst", "Recorded by", "", "text", true)}</div><details class="form-details"><summary>Container, lot and stock settings</summary><div class="form-grid">${field("bottleId", "Bottle ID", bottleId, "text", true)}${traceFields(source)}${field("tare", "Empty container weight (g)", "", "number")}${densityFields()}${field("lot", "Batch / lot number")}${field("supplier", "Supplier")}${field("received", "Date received", "", "date")}${field("expiry", "Expiration date", "", "date")}${field("minimum", "Minimum stock (in stock unit)", "", "number")}${field("capacity", "Full reference amount (in stock unit)", "", "number")}</div></details><p class="quiet">Gross weight needs a container tare to establish net stock.</p><div class="dialog-actions"><button type="button" class="button secondary" data-close>Cancel</button><button type="submit" class="button primary">Save quantity</button></div></form>`,
   );
   const form = document.querySelector("#quantity-form");
+  form.elements.bottleId.readOnly = true;
+  form.elements.internalCode.readOnly = true;
+  form.elements.stockGroup.addEventListener(
+    "change",
+    () =>
+      (form.elements.internalCode.value = stockCode(
+        proposed.internalCode,
+        form.elements.stockGroup.value,
+      )),
+  );
   bindPhase(form);
   form.elements.unit.onchange = () => {
     form.elements.method.value =
@@ -953,19 +1070,37 @@ function quantityForm(source) {
     try {
       const input = {
         ...source,
+        ...proposed,
+        autoNumbering: true,
         ...Object.fromEntries(new FormData(form)),
         catalogId: source.id,
         section: "raw",
       };
-      commit(register(state, input, input));
+      commit(register(state, input, input, sourceCatalog));
       toast("Quantity saved.");
     } catch (err) {
       dialogError(err.message);
     }
   };
 }
-function bottleForm(source = null, existing = null) {
-  const b = existing || source || {},
+function bottleForm(source = null, existing = null, templateKey = null) {
+  const copied =
+    source && !existing ? bottleTemplate(state, source, templateKey) : null;
+  const generated =
+    state.numberingVersion >= 2 && !source && !existing && section === "raw"
+      ? {
+          ...nextBottleDetails(state, {
+            id: "pending",
+            internalCode: nextChemicalCode(state, sourceCatalog, {
+              prefix: "CHEM-",
+              padding: 3,
+            }),
+            stockGroup: "active",
+          }),
+          autoNumbering: true,
+        }
+      : null;
+  const b = existing || copied?.draft || source || generated || {},
     editing = !!existing,
     isStandard = (existing?.section || section) === "standard";
   showModal(
@@ -974,7 +1109,7 @@ function bottleForm(source = null, existing = null) {
       : isStandard
         ? "Register standardized stock"
         : "Register raw chemical bottle",
-    `<form id="bottle-form">${!editing && !isStandard ? `<label class="field catalog-picker"><span>Choose from your locator (or enter a custom chemical)</span><input id="choose-catalog" list="chemical-options" placeholder="Type a chemical name" autocomplete="off"><datalist id="chemical-options">${catalog.map((c) => `<option value="${esc(c.name + " — " + (c.storage || "No storage") + " [row " + c.sourceRow + "]")}"></option>`).join("")}</datalist></label>` : ""}<div class="form-grid">${field("bottleId", "Unique bottle ID", b.bottleId || "", "text", true)}${traceFields(b)}${field("name", isStandard ? "Solution name" : "Chemical name", b.name || "", "text", true)}${isStandard ? field("concentration", "Verified concentration", b.concentration || "", "text", true, "Include units, e.g. 0.1002 mol/L or 0.1 N.") : ""}${field("purity", "Purity / grade (as labeled)", b.purity || "")}${select("phase", "Physical state", ["Not recorded", "Solid", "Liquid", "Other"], b.phase || "Not recorded")}${field("lot", "Batch / lot number", b.lot || "")}${field("supplier", "Supplier", b.supplier || "")}${field("storage", "Storage location", b.storage || "")}${field("classification", "Classification", b.classification || "")}${field("received", "Date received", b.received || "", "date")}${field("expiry", "Expiration date", b.expiry || "", "date")}${field("analyst", "Analyst / recorded by", b.analyst || "", "text", true)}${isStandard ? field("standardDate", "Standardization date", b.standardDate || today(), "date", true) + field("restandardDate", "Restandardization due", b.restandardDate || "", "date", true) : ""}</div><details class="form-details" ${!isStandard ? "open" : ""}><summary>Chemical reference details</summary><div class="form-grid">${field("formula", "Molecular formula (source)", b.formula || "")}${field("cas", "CAS number (source)", b.cas || "")}${field("hazards", "Key hazards (source, verify SDS)", b.hazards || "")}</div><small class="quiet">Locator values are preserved as supplied. Verify identity and metadata against the actual bottle. Raw section includes supplied reagents; purity is not inferred.</small></details><div class="form-section"><h3>Stock tracking</h3><div class="form-grid">${
+    `<form id="bottle-form">${copied?.previous ? `<p class="notice">Details copied from ${esc(copied.previous.bottleId)}. Review lot, supplier and dates. Quantity, opening details and container tare are blank for the new bottle.</p>` : ""}${!editing && !isStandard ? `<label class="field catalog-picker"><span>Choose from your locator (or enter a custom chemical)</span><input id="choose-catalog" list="chemical-options" placeholder="Type a chemical name" autocomplete="off"><datalist id="chemical-options">${catalog.map((c) => `<option value="${esc(c.name + " — " + (c.storage || "No storage") + " [" + tracingDetails(c).internalCode + "]")}"></option>`).join("")}</datalist></label>` : ""}<div class="form-grid">${field("bottleId", "Unique bottle ID", b.bottleId || "", "text", true)}${traceFields(b)}${field("name", isStandard ? "Solution name" : "Chemical name", b.name || "", "text", true)}${isStandard ? field("concentration", "Verified concentration", b.concentration || "", "text", true, "Include units, e.g. 0.1002 mol/L or 0.1 N.") : ""}${field("purity", "Purity / grade (as labeled)", b.purity || "")}${select("phase", "Physical state", ["Not recorded", "Solid", "Liquid", "Other"], b.phase || "Not recorded")}${field("lot", "Batch / lot number", b.lot || "")}${field("supplier", "Supplier", b.supplier || "")}${field("storage", "Storage location", b.storage || "")}${field("classification", "Classification", b.classification || "")}${field("received", "Date received", b.received || "", "date")}${field("expiry", "Expiration date", b.expiry || "", "date")}${field("analyst", "Analyst / recorded by", b.analyst || "", "text", true)}${isStandard ? field("standardDate", "Standardization date", b.standardDate || today(), "date", true) + field("restandardDate", "Restandardization due", b.restandardDate || "", "date", true) : ""}</div><details class="form-details" ${!isStandard ? "open" : ""}><summary>Chemical reference details</summary><div class="form-grid">${field("formula", "Molecular formula (source)", b.formula || "")}${field("cas", "CAS number (source)", b.cas || "")}${field("hazards", "Key hazards (source, verify SDS)", b.hazards || "")}</div><small class="quiet">Locator values are preserved as supplied. Verify identity and metadata against the actual bottle. Raw section includes supplied reagents; purity is not inferred.</small></details><div class="form-section"><h3>Stock tracking</h3><div class="form-grid">${
       editing
         ? `<div class="field"><span>Fixed stock unit</span><strong>${esc(b.unit)}</strong><small>Use Physical inventory to correct stock quantities.</small></div>`
         : select(
@@ -984,13 +1119,25 @@ function bottleForm(source = null, existing = null) {
               ["g", "g — net mass"],
               ["mL", "mL — liquid volume"],
             ],
-            isStandard ? "mL" : "g",
+            b.unit || (isStandard ? "mL" : "g"),
           )
     }${densityFields(b)}${field("minimum", "Minimum stock alert", b.minimum ?? "", "number", false, "In the bottle’s stock unit. Leave blank if not set.")}${field("capacity", "Full reference amount", b.capacity ?? "", "number", false, "In the stock unit. Optional; used for an estimated fill bar.")}</div></div>${editing ? "" : measurementFields(b)}${field("notes", "Notes / purity / label details", b.notes || "")}${editing ? field("reason", "Reason for correction", "", "text", true) : ""}<div class="dialog-actions"><button type="button" class="button secondary" data-close>Cancel</button><button class="button primary" type="submit">${editing ? "Save correction" : "Register bottle"}</button></div></form>`,
   );
   const form = document.querySelector("#bottle-form");
   bindPhase(form);
   let chosen = source;
+  if (chosen || generated || (editing && b.containerCode))
+    form.elements.bottleId.readOnly = true;
+  if (chosen || state.numberingVersion >= 2)
+    form.elements.internalCode.readOnly = true;
+  form.elements.stockGroup.addEventListener(
+    "change",
+    () =>
+      (form.elements.internalCode.value = stockCode(
+        form.elements.internalCode.value,
+        form.elements.stockGroup.value,
+      )),
+  );
   const picker = document.querySelector("#choose-catalog");
   if (picker)
     picker.onchange = () => {
@@ -1000,23 +1147,19 @@ function bottleForm(source = null, existing = null) {
           c.name +
             " — " +
             (c.storage || "No storage") +
-            " [row " +
-            c.sourceRow +
+            " [" +
+            tracingDetails(c).internalCode +
             "]",
       );
       if (c) {
         chosen = c;
-        form.elements.stockGroup.value = tracingDetails(c).stockGroup;
-        form.elements.internalCode.value = tracingDetails(c).internalCode;
-        for (const k of [
-          "name",
-          "storage",
-          "classification",
-          "formula",
-          "cas",
-          "hazards",
-        ])
-          form.elements[k].value = c[k] || "";
+        const { draft } = bottleTemplate(state, c);
+        for (const [key, value] of Object.entries(draft))
+          if (form.elements[key] && value !== null && value !== undefined)
+            form.elements[key].value = String(value);
+        form.elements.bottleId.readOnly = true;
+        form.elements.internalCode.readOnly = true;
+        form.elements.phase.dispatchEvent(new Event("change"));
       }
     };
   form.onsubmit = (e) => {
@@ -1026,9 +1169,18 @@ function bottleForm(source = null, existing = null) {
       data.section = existing?.section || section;
       data.sourceRow = chosen?.sourceRow || existing?.sourceRow || null;
       data.catalogId = chosen?.id || existing?.catalogId || null;
+      if (generated) data.autoNumbering = true;
+      if (chosen && !editing) {
+        const proposed = nextBottleDetails(state, {
+          ...chosen,
+          stockGroup: data.stockGroup,
+          internalCode: data.internalCode,
+        });
+        Object.assign(data, proposed, { autoNumbering: true });
+      }
       const next = editing
-        ? editBottle(state, b.id, data)
-        : register(state, data, data);
+        ? editBottle(state, b.id, data, sourceCatalog)
+        : register(state, data, data, sourceCatalog);
       commit(next);
       toast(
         editing
@@ -1048,6 +1200,10 @@ function detail(key) {
     `<div class="detail-top"><div><span class="bottle-tag">${esc(b.bottleId)}</span> <span class="type-label">${esc(b.section === "raw" ? "Raw chemical" : "Standardized stock")}</span><h3 class="detail-balance">${num(b.balance)} ${esc(b.balance === null ? "" : b.unit)}</h3>${level(b)}</div><div>${badges(b)}</div></div><div class="button-group"><button class="button primary" id="detail-withdraw" >Withdraw</button><button class="button secondary" id="detail-inventory">Physical inventory</button>${b.section === "standard" ? '<button class="button secondary" id="detail-standard">Restandardize</button>' : ""}<button class="button secondary" id="detail-observe">Visual observation</button><button class="text-button" id="detail-edit">Correct details</button></div><dl class="detail-grid">${[
       ["Stock group", b.stockGroup === "old" ? "Old stock" : "Active"],
       ["Internal chemical code", b.internalCode],
+      ["Stable container code", b.containerCode],
+      ["Previous bottle labels", (b.legacyBottleIds || []).join("; ")],
+      ["Previous chemical codes", (b.legacyInternalCodes || []).join("; ")],
+      ["Identity review", b.numberingReview],
       ["Lab code", b.labCode],
       [
         "Formula weight",

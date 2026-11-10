@@ -1,3 +1,4 @@
+import { repairRegistration, stockCode } from "./numbering.js";
 import {
   nextChemicalCode,
   codeBasis,
@@ -69,9 +70,9 @@ export function measuredBalance({ method, amount, tare, unit, density }) {
   };
 }
 export function tracingDetails(b, catalog = []) {
-  const source = catalog.find(
-    (c) => c.id === b.catalogId || (b.sourceRow && c.sourceRow === b.sourceRow),
-  );
+  const source =
+    catalog.find((c) => c.id === b.catalogId) ||
+    (b.sourceRow && catalog.find((c) => c.sourceRow === b.sourceRow));
   return {
     ...b,
     stockGroup:
@@ -115,7 +116,9 @@ export function normalizeBottle(input, existing = []) {
   if (
     existing.some(
       (x) =>
-        x.bottleId.toLowerCase() === b.bottleId.trim().toLowerCase() &&
+        (b.containerCode && x.containerCode
+          ? x.containerCode.toLowerCase() === b.containerCode.toLowerCase()
+          : x.bottleId.toLowerCase() === b.bottleId.trim().toLowerCase()) &&
         x.id !== b.id,
     )
   )
@@ -186,7 +189,7 @@ function addEvent(state, b, event) {
     events: [...state.events, e],
   };
 }
-export function register(state, input, measurement) {
+export function register(state, input, measurement, base = []) {
   const b = normalizeBottle({ ...input, id: id() }, state.bottles);
   if (
     b.phase === "Solid" &&
@@ -197,7 +200,7 @@ export function register(state, input, measurement) {
     b,
     measuredBalance({ ...measurement, unit: b.unit, density: b.density }),
   );
-  return addEvent(state, b, {
+  const next = addEvent(state, b, {
     type: "Registered",
     before: null,
     after: b.balance,
@@ -207,6 +210,12 @@ export function register(state, input, measurement) {
     measurement: { ...measurement },
     snapshot: { ...b },
   });
+  return input.autoNumbering || state.numberingVersion >= 2
+    ? repairRegistration(next, base, {
+        analyst: b.analyst,
+        reason: "Assign bottle sequence after registration",
+      })
+    : next;
 }
 export function transact(state, key, input) {
   const old = state.bottles.find((x) => x.id === key);
@@ -364,7 +373,7 @@ export function transact(state, key, input) {
   event.after = b.balance;
   return addEvent(state, b, event);
 }
-export function editBottle(state, key, input) {
+export function editBottle(state, key, input, base = []) {
   const old = state.bottles.find((x) => x.id === key);
   if (!old) throw new Error("Bottle not found.");
   if (old.deleted)
@@ -388,7 +397,7 @@ export function editBottle(state, key, input) {
   );
   if (!input.reason?.trim())
     throw new Error("Reason for metadata correction is required.");
-  return addEvent(state, b, {
+  const next = addEvent(state, b, {
     type: "Details corrected",
     before: old.balance,
     after: b.balance,
@@ -397,6 +406,12 @@ export function editBottle(state, key, input) {
     previous: { ...old },
     snapshot: { ...b },
   });
+  return state.numberingVersion >= 2
+    ? repairRegistration(next, base, {
+        analyst: b.analyst,
+        reason: input.reason,
+      })
+    : next;
 }
 export function alerts(b, date = today()) {
   if (b.deleted) return ["Removed record"];
@@ -464,6 +479,14 @@ export function validateBackup(data) {
     );
   const ids = new Set();
   for (const b of data.bottles) {
+    if (
+      b.containerCode &&
+      (typeof b.containerCode !== "string" ||
+        data.bottles.some(
+          (x) => x.id !== b.id && x.containerCode === b.containerCode,
+        ))
+    )
+      throw new Error("Duplicate stable container code.");
     if (typeof b.id !== "string" || ids.has(b.id))
       throw new Error("Invalid or duplicate bottle key.");
     ids.add(b.id);
@@ -554,6 +577,9 @@ export function validateBackup(data) {
   }
   return structuredClone({
     schema: SCHEMA,
+    ...(data.numberingVersion !== undefined
+      ? { numberingVersion: data.numberingVersion }
+      : {}),
     bottles: data.bottles,
     events: data.events,
     ...(data.registry !== undefined ? { registry: data.registry } : {}),
@@ -658,13 +684,16 @@ export function saveChemical(state, base, input, key = null) {
     chemicalRegistry(base, state).some(
       (other) =>
         other.id !== c.id &&
-        tracingDetails(other).internalCode.toLowerCase() ===
-          c.internalCode.toLowerCase(),
+        stockCode(
+          tracingDetails(other).internalCode,
+          "active",
+        ).toLowerCase() === stockCode(c.internalCode, "active").toLowerCase(),
     )
   )
     throw new Error(
       "Chemical code is already assigned to another registry entry.",
     );
+  c.internalCode = stockCode(c.internalCode, c.stockGroup || "active");
   if (c.formulaWeight === 0)
     throw new Error("Formula weight must be greater than zero.");
   if (!["active", "old"].includes(c.stockGroup || "active"))
@@ -729,7 +758,7 @@ export function saveChemical(state, base, input, key = null) {
     }
   return next;
 }
-export function setDisposition(state, key, input) {
+export function setDisposition(state, key, input, base = []) {
   const old = state.bottles.find((b) => b.id === key);
   if (!old) throw new Error("Bottle not found.");
   if (old.deleted)
@@ -770,7 +799,7 @@ export function setDisposition(state, key, input) {
     b.balance = old.balance === null ? null : 0;
     type = "Disposed";
   }
-  return addEvent(state, b, {
+  const next = addEvent(state, b, {
     type,
     before: old.balance,
     after: b.balance,
@@ -785,9 +814,15 @@ export function setDisposition(state, key, input) {
       previousGross: old.gross ?? null,
     },
   });
+  return state.numberingVersion >= 2
+    ? repairRegistration(next, base, {
+        analyst: details.analyst,
+        reason: details.reason,
+      })
+    : next;
 }
 
-export function removeBottle(state, key, input, restore = false) {
+export function removeBottle(state, key, input, restore = false, base = []) {
   const old = state.bottles.find((b) => b.id === key);
   if (!old) throw new Error("Bottle not found.");
   if (!input.analyst?.trim() || !input.reason?.trim())
@@ -806,7 +841,7 @@ export function removeBottle(state, key, input, restore = false) {
       analyst: input.analyst.trim(),
       reason: input.reason.trim(),
     };
-  return addEvent(state, b, {
+  const next = addEvent(state, b, {
     type: restore ? "Bottle restored" : "Bottle removed",
     before: old.balance,
     after: old.balance,
@@ -814,4 +849,10 @@ export function removeBottle(state, key, input, restore = false) {
     reason: input.reason.trim(),
     removal: { previous, snapshot: b.deleted || null },
   });
+  return state.numberingVersion >= 2
+    ? repairRegistration(next, base, {
+        analyst: input.analyst,
+        reason: input.reason,
+      })
+    : next;
 }

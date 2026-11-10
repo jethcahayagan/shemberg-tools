@@ -1,0 +1,15 @@
+SHEMBERG QA LAB CHEMICALS INVENTORY
+
+UPDATE YOUR EXISTING RECORDS
+1. Keep your original JSON backup unchanged.
+2. Open Shemberg-Backup-Updater.html in your browser.
+3. Choose your existing JSON backup and click Download updated JSON backup.
+4. Open Shemberg-Chemicals-Inventory.html. Under Backups & guide, restore the updated JSON.
+
+The updater works locally and never uploads your records. Original quantities, bottle keys and historical logs are retained.
+
+The app has Set Active / Set Old stock buttons, automatic chemical codes, fraction bottle labels and copied editable details when adding a bottle.
+
+Registry-identity-review.csv lists eleven spreadsheet CAS conflicts retained for review; no chemical identity was silently overwritten. New list entries have no quantities until you enter actual stock.
+
+Created by Jermaine Theus Cahayagan.

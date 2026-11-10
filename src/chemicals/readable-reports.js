@@ -27,6 +27,12 @@ export const reportFields = [
     (b) => [b.name, b.concentration].filter(Boolean).join(" · "),
   ],
   ["bottleId", "Bottle ID", (b) => b.bottleId || "Not recorded"],
+  ["containerCode", "Stable container code", (b) => b.containerCode || ""],
+  [
+    "legacyBottleIds",
+    "Previous bottle labels",
+    (b) => (b.legacyBottleIds || []).join("; "),
+  ],
   [
     "quantity",
     "Quantity",

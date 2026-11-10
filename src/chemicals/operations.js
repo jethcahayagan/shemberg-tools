@@ -8,7 +8,13 @@ import {
 export function codeHistory(state, base) {
   const codes = [];
   const add = (r) => {
-    if (r?.internalCode) codes.push(String(r.internalCode));
+    if (r?.internalCode)
+      codes.push(
+        String(r.internalCode).replace(
+          /^(?:(?:OLD|OLS)\s*STOCK|ACTIVE)\s*[-:]?\s*/i,
+          "",
+        ),
+      );
   };
   for (const c of base) add(tracingDetails(c));
   for (const c of chemicalRegistry(base, state)) add(tracingDetails(c));
@@ -34,7 +40,9 @@ export function nextChemicalCode(
   base,
   { prefix = "CHEM-", padding = 3 } = {},
 ) {
-  prefix = prefix.trim();
+  prefix = prefix
+    .trim()
+    .replace(/^(?:(?:OLD|OLS)\s*STOCK|ACTIVE)\s*[-:]?\s*/i, "");
   padding = Number(padding);
   if (
     prefix.length > 40 ||
