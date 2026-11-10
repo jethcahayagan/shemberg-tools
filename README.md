@@ -101,3 +101,7 @@ npm run test:e2e            # Browser workflows, downloads and standalone test
 Browser tests use /usr/bin/chromium when present. Otherwise run `npx playwright install chromium` or set CHROMIUM_PATH. The suite starts its own Vite server on port 5180. Managed cloud Chromium blocks file: navigation, so the standalone test delivers the exact HTML bytes through a locally intercepted document request and rejects all external resource requests. It exercises persistence, CSV import, logo and all three exports without external resources. Direct file opening is intended for normal desktop browsers.
 
 For web hosting, publish the contents of dist/ to a static host. Use `npm run build` as build command and dist as output directory. Relative paths support subdirectories. Pushing the source does not deploy a site. To distribute the offline app, distribute only standalone/Shemberg-Inventory.html.
+
+## QA Lab Chemicals Inventory
+
+A separate offline chemical inventory is available in [standalone/Shemberg-Chemicals-Inventory.html](standalone/Shemberg-Chemicals-Inventory.html). It includes the supplied 136-entry chemical locator, bottle/lot tracking, measured stocks, withdrawal logbooks, standardized solutions, alerts, and Excel/Word/PDF exports. See [CHEMICALS-README.md](CHEMICALS-README.md) for use, backups, measurement rules, and development commands.

@@ -3,6 +3,7 @@ export default defineConfig({
   base: "./",
   build: {
     rollupOptions: {
+      input: { inventory: "index.html", chemicals: "chemicals.html" },
       output: {
         manualChunks(id) {
           if (id.includes("exceljs")) return "excel";
